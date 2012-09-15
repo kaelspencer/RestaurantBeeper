@@ -39,6 +39,7 @@ def register_visitor(request, slug):
         data = dict()
         data['poll_url'] = visitor.get_poll_url()
         data['delay_url'] = visitor.get_delay_url()
+        data['cancel_url'] = visitor.get_cancel_url()
 
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
@@ -94,7 +95,6 @@ def delay(request, slug):
 
         return retrieve_visitor(request, slug)
     except ObjectDoesNotExist:
-        print 'returning 404'
         return HttpResponseNotFound()
 
 def cancel(request, slug):
@@ -109,5 +109,4 @@ def cancel(request, slug):
 
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
-        print 'returning 404'
         return HttpResponseNotFound()

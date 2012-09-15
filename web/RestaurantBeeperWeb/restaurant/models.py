@@ -58,6 +58,9 @@ class Visitor(models.Model):
     def get_delay_url(self):
         return 'delay/' + self.key + '/'
 
+    def get_cancel_url(self):
+        return 'cancel/' + self.key + '/'
+
     def delay(self):
         self.time_to_wait = self.time_to_wait + 5
         super(Visitor, self).save()
