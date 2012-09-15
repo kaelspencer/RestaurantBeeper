@@ -19,6 +19,8 @@ class Visitor(models.Model):
     guests = models.IntegerField()
     time_to_wait = models.IntegerField()
     key = models.CharField(max_length=20, primary_key=True)
+    registered = models.BooleanField(default=False)
+    push_enabled = models.BooleanField(default=False)
 
     class Meta:
         verbose_name_plural = 'visitors'
@@ -39,4 +41,11 @@ class Visitor(models.Model):
         data['time_to_wait'] = self.time_to_wait
         data['key'] = self.key
 
+        # TODO Kael: This is for testing only.
+        data['registered'] = self.registered
+        data['push_enabled'] = self.push_enabled
+
         return data
+
+    def get_poll_url(self):
+        return '/retrieve/' + self.key + '/'
