@@ -8,6 +8,7 @@ from django.forms import ModelForm
 import urllib
 from .models import Visitor, Restaurant
 import json
+from django.contrib.auth.decorators import login_required
 
 def retrieve_visitor(request, slug):
     try:
@@ -63,6 +64,7 @@ class NewReservationForm(ModelForm):
         self.key = obj.key
         return self
 
+@login_required(login_url='/login/')
 def reservation_new(request):
     if request.method == 'POST':
         form = NewReservationForm(request.POST)
