@@ -18,7 +18,7 @@ class Visitor(models.Model):
     name = models.CharField(max_length=200)
     guests = models.IntegerField()
     time_to_wait = models.IntegerField()
-    key = models.CharField(max_length=20)
+    key = models.CharField(max_length=20, primary_key=True)
 
     class Meta:
         verbose_name_plural = 'visitors'
@@ -30,3 +30,13 @@ class Visitor(models.Model):
     def save(self, *args, **kwargs):
         self.key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
         super(Visitor, self).save(*args, **kwargs)
+
+    def get_dict(self):
+        data = dict()
+        data['restaurant'] = str(self.restaurant)
+        data['name'] = self.name
+        data['guests'] = self.guests
+        data['time_to_wait'] = self.time_to_wait
+        data['key'] = self.key
+
+        return data

@@ -104,6 +104,15 @@ MIDDLEWARE_CLASSES = (
     # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
+if DEBUG:
+    MIDDLEWARE_CLASSES += (
+        'debug_toolbar.middleware.DebugToolbarMiddleware',
+    )
+
+    INTERNAL_IPS = (
+        '127.0.0.1'
+    )
+
 ROOT_URLCONF = 'RestaurantBeeperWeb.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
@@ -126,6 +135,11 @@ INSTALLED_APPS = (
     'django.contrib.admindocs',
     'restaurant',
 )
+
+if DEBUG:
+    INSTALLED_APPS += (
+        'debug_toolbar',
+    )
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
