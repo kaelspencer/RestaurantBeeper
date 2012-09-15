@@ -57,6 +57,7 @@
     <Reference Include="Silverlight_ZXing_Core">
       <HintPath>..\..\..\..\wpqr-control\bin\Silverlight_ZXing_Core.dll</HintPath>
     </Reference>
+    <Reference Include="System.ServiceModel.Web" />
     <Reference Include="System.Windows" />
     <Reference Include="system" />
     <Reference Include="System.Core" />

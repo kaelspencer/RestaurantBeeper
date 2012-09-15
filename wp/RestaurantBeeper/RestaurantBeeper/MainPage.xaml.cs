@@ -11,9 +11,22 @@ using System.Windows.Media.Animation;
 using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
+using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.Text;
 
 namespace RestaurantBeeper
 {
+    public class CodeData
+    {
+        public int time_to_wait { get; set; }
+        public int guests { get; set; }
+        public string name { get; set; }
+        public string key { get; set; }
+        public string restaurant { get; set; }
+    }
+
     public partial class MainPage : PhoneApplicationPage
     {
         // Constructor
@@ -37,6 +50,8 @@ namespace RestaurantBeeper
 
             this.qrScanner.Visibility = Visibility.Collapsed;
             this.qrScanner.StopScanning();
+
+            this.buttonWaiting.IsEnabled = true;
         }
 
         // Load data for the ViewModel Items
@@ -115,6 +130,43 @@ namespace RestaurantBeeper
         private void CodeRetrieved(string code)
         {
             this.textBlockResult.Text = code;
+        }
+
+        private void buttonWaiting_Click(object sender, RoutedEventArgs e)
+        {
+            // TODO: Put this in a better place
+            DownloadStringCompleted(null, null);
+            return;
+            WebClient webClient = new WebClient();
+            webClient.DownloadStringAsync(new Uri(@"http://descartes:8000/get/IL0LQO9ipGNEisHHmhhz/"));
+            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DownloadStringCompleted);
+        }
+
+        void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            try
+            {
+                //string result = e.Result;
+                string result = "{\"time_to_wait\": 45, \"guests\": 1, \"name\": \"Goose\", \"key\": \"IL0LQO9ipGNEisHHmhhz\", \"restaurant\": \"Boom Noodle\"}";
+
+                // convert string to stream
+                byte[] byteArray = Encoding.UTF8.GetBytes(result);
+                MemoryStream stream = new MemoryStream(byteArray);
+
+                // Open the stream in a StreamReader
+                StreamReader streamReader = new StreamReader(stream);
+                string json = streamReader.ReadToEnd();
+                var serializer = new DataContractJsonSerializer(typeof(CodeData));
+                CodeData codeData = (CodeData)serializer.ReadObject(stream);
+                streamReader.Close();
+
+                MessageBox.Show(String.Format("Restaurant: {0}, Guests: {1}, Name: {2}, Time To Wait: {3}, Key: {4}", codeData.restaurant, codeData.guests, codeData.name, codeData.time_to_wait, codeData.key));
+            }
+            catch (System.Exception ex)
+            {
+                // TODO: Properly handle errors. e.g. 404, not found, etc.
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }
