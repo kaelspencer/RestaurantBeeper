@@ -94,4 +94,20 @@ def delay(request, slug):
 
         return retrieve_visitor(request, slug)
     except ObjectDoesNotExist:
+        print 'returning 404'
+        return HttpResponseNotFound()
+
+def cancel(request, slug):
+    try:
+        visitor = Visitor.objects.get(key=slug)
+        visitor.delete()
+
+        data = dict()
+        data['status'] = 'ok'
+        data['code'] = 0
+        data['message'] = 'Reservation deleted'
+
+        return HttpResponse(json.dumps(data), mimetype='application/json')
+    except ObjectDoesNotExist:
+        print 'returning 404'
         return HttpResponseNotFound()
