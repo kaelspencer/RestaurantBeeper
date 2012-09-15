@@ -50,7 +50,7 @@ namespace RestaurantBeeper
 
         private void qrButton_Click(object sender, RoutedEventArgs e)
         {
-            switch(this.qrScanner.Visibility)
+            switch (this.qrScanner.Visibility)
             {
                 case Visibility.Collapsed:
                     // The control was hidden, make it visible and start
@@ -58,23 +58,63 @@ namespace RestaurantBeeper
                     this.qrScanner.StartScanning();
                     break;
                 case Visibility.Visible:
+                    // The control was already visible. Treating as toggle.
                     this.qrScanner.StopScanning();
                     this.qrScanner.Visibility = Visibility.Collapsed;
-                    // The control was already visible... Do something?
                     break;
             }
         }
 
         private void QRCodeScanner_ScanComplete(object sender, JeffWilcox.Controls.ScanCompleteEventArgs e)
         {
-            this.textBlockResult.Text = e.Result;
+            CodeRetrieved(e.Result);
             this.qrScanner.StopScanning();
             this.qrScanner.StartScanning();
+
+            this.buttonWaiting.IsEnabled = true;
+            this.buttonWaiting.Content = "Ready. Tap to continue.";
         }
 
         private void QRCodeScanner_Error(object sender, JeffWilcox.Controls.ScanFailureEventArgs e)
         {
-            MessageBox.Show("GTFO");
+            MessageBox.Show("There was a problem accessing the camera. Please try again. If that does not work, please close and re-open the app.", "Hmm...", MessageBoxButton.OK);
+        }
+
+        private void hyperlinkButton1_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBoxResult messageboxResult = MessageBox.Show("If you're having trouble scanning, we can try to enter a code manually.", "Having trouble?", MessageBoxButton.OKCancel);
+
+            // If the user opted to continue with manual code entry, stop the QR scanner and change pages to the manual code entry page
+            if (messageboxResult == MessageBoxResult.OK)
+            {
+                this.qrScanner.StopScanning();
+                this.qrScanner.Visibility = Visibility.Collapsed;
+                NavigationService.Navigate(new Uri("/ManualCodePage.xaml", UriKind.Relative));
+            }
+        }
+
+        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            string result = "";
+
+            // Check to see if the page is navigated to from another page (e.g. the manual code entry page)
+            if (NavigationContext.QueryString.TryGetValue("ManualCode", out result))
+            {
+                CodeRetrieved(result);
+
+                // While there are pages on the backstack, clear them out.
+                while (NavigationService.CanGoBack)
+                {
+                    NavigationService.RemoveBackEntry();
+                }
+            }
+        }
+
+        private void CodeRetrieved(string code)
+        {
+            this.textBlockResult.Text = code;
         }
     }
 }
