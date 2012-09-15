@@ -7,7 +7,22 @@ import json
 def retrieve_visitor(request, slug):
     try:
         visitor = Visitor.objects.get(key=slug)
-        return HttpResponse(json.dumps(visitor.get_dict()), mimetype='application/json')
+
+        data = dict()
+
+        if visitor.registered:
+            data['status'] = 'ok'
+            data['code'] = 0
+            data['message'] = ''
+            data['data'] = visitor.get_dict()
+        else:
+            data = dict()
+            data['status'] = 'bad'
+            data['code'] = 1
+            data['message'] = 'Visitor is not registered'
+            data['data'] = dict()
+
+        return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
         return HttpResponseNotFound()
 
