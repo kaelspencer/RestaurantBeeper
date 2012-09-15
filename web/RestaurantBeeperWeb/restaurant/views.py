@@ -1,12 +1,12 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import DetailView
-from django.http import HttpResponse, HttpResponseNotFound
-from django.shortcuts import render_to_response
+from django.http import HttpResponse, HttpResponseNotFound, HttpResponseRedirect
+from django.shortcuts import render_to_response, RequestContext
 from django.template.defaultfilters import stringfilter
-from django.utils.html import conditional_escape
-from django.utils.safestring import mark_safe
+from django.core.context_processors import csrf
+from django.forms import ModelForm
 import urllib
-from .models import Visitor
+from .models import Visitor, Restaurant
 import json
 
 def retrieve_visitor(request, slug):
@@ -43,10 +43,44 @@ def register_visitor(request, slug):
     except ObjectDoesNotExist:
         return HttpResponseNotFound()
 
-def register_new(request):
-    context = {'qrcode_url': qrcode('http://descartes:8000/register/')}
+class NewReservationForm(ModelForm):
+    class Meta:
+        model = Visitor
+        exclude = ('restaurant', 'key', 'registered', 'push_enabled')
 
-    return render_to_response('restaurant/register.html', context)
+    def save(self, *args, **kwargs):
+        kwargs['commit']=False
+        obj = super(NewReservationForm, self).save(*args, **kwargs)
+
+        if self.request:
+            restaurant = Restaurant.objects.get(user=self.request.user)
+            obj.restaurant = restaurant
+
+        obj.save()
+        self.key = obj.key
+        return self
+
+def reservation_new(request):
+    if request.method == 'POST':
+        form = NewReservationForm(request.POST)
+        form.request = request
+
+        if form.is_valid():
+            visitor = form.save()
+
+            return HttpResponseRedirect('/reserve/' + visitor.key + '/')
+    else:
+        form = NewReservationForm()
+
+    context = {'form': form}
+    context.update(csrf(request))
+
+    return render_to_response('restaurant/reservation.new.html', context, context_instance=RequestContext(request))
+
+def reservation_view(request, slug):
+    context = {'qrcode_url': qrcode('http://descartes:8000/register/' + slug)}
+
+    return render_to_response('restaurant/reservation.view.html', context)
 
 @stringfilter
 def qrcode(value):
