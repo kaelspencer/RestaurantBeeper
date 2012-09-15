@@ -1,10 +1,13 @@
 # Django settings for RestaurantBeeperWeb project.
 
+from unipath import FSPath as Path
 import json
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
 )
+
+BASE = Path(__file__).absolute().ancestor(2)
 
 MANAGERS = ADMINS
 
@@ -118,11 +121,7 @@ ROOT_URLCONF = 'RestaurantBeeperWeb.urls'
 # Python dotted path to the WSGI application used by Django's runserver.
 WSGI_APPLICATION = 'RestaurantBeeperWeb.wsgi.application'
 
-TEMPLATE_DIRS = (
-    # Put strings here, like "/home/html/django_templates" or "C:/www/django/templates".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
-)
+TEMPLATE_DIRS = [BASE.child('templates')]
 
 INSTALLED_APPS = (
     'django.contrib.auth',
