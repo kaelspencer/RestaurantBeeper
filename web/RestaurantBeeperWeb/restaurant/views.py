@@ -40,6 +40,7 @@ def register_visitor(request, slug):
         data['poll_url'] = visitor.get_poll_url()
         data['delay_url'] = visitor.get_delay_url()
         data['cancel_url'] = visitor.get_cancel_url()
+        data['restaurant_url'] = visitor.get_restaurant_url()
 
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
@@ -106,6 +107,15 @@ def cancel(request, slug):
         data['status'] = 'ok'
         data['code'] = 0
         data['message'] = 'Reservation deleted'
+
+        return HttpResponse(json.dumps(data), mimetype='application/json')
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound()
+
+def restaurant_view(request, slug):
+    try:
+        restaurant = Visitor.objects.get(key=slug).restaurant
+        data = restaurant.get_data()
 
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
