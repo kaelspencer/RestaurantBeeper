@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical" >
+    
+    <TextView 
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/estimated_wait" />
+    
+    <TextView
+        android:id="@+id/estimated_wait"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:text="@string/default_wait_time"
+        android:textSize="100dp" />
+    
+    <Button android:id="@+id/delay_reservation"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/delay_reservation" />
+    
+    <Button android:id="@+id/cancel_reservation"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/cancel_reservation" />
+
+    <Button android:id="@+id/take_reservation"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/take_reservation"
+        android:visibility="gone" />
+</LinearLayout>

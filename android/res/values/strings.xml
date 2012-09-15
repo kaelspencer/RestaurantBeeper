@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">Restaurant Beeper</string>
+    <string name="resolve_dependency">Download Required App</string>
+    <string name="scanner_dependency">Our application relies on a fantastic 3rd party scanner application called ZXing. It saves us from having to write our own QR Code Decoder! Please download ZXing below to be able to use our application.</string>
+    <string name="estimated_wait">Estimated Wait:</string>
+    <string name="default_wait_time">XX min</string>
+    <string name="cancel_reservation">Cancel Reservation</string>
+    <string name="take_reservation">Time to Eat!</string>
+    <string name="delay_reservation">Delay My Reservation</string>
+    <string name="make_reservation">Make a Reservation</string>
+    <string name="confirm_reservation">Confirm Reservation</string>
+</resources>
