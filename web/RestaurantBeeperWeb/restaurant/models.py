@@ -54,3 +54,10 @@ class Visitor(models.Model):
 
     def get_poll_url(self):
         return 'retrieve/' + self.key + '/'
+
+    def get_delay_url(self):
+        return 'delay/' + self.key + '/'
+
+    def delay(self):
+        self.time_to_wait = self.time_to_wait + 5
+        super(Visitor, self).save()

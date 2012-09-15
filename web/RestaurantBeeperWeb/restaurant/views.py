@@ -38,6 +38,7 @@ def register_visitor(request, slug):
 
         data = dict()
         data['poll_url'] = visitor.get_poll_url()
+        data['delay_url'] = visitor.get_delay_url()
 
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
@@ -85,3 +86,12 @@ def reservation_view(request, slug):
 @stringfilter
 def qrcode(value):
     return "http://chart.apis.google.com/chart?" + urllib.urlencode({'chs':'500x500', 'cht':'qr', 'chl':value})
+
+def delay(request, slug):
+    try:
+        visitor = Visitor.objects.get(key=slug)
+        visitor.delay()
+
+        return retrieve_visitor(request, slug)
+    except ObjectDoesNotExist:
+        return HttpResponseNotFound()
