@@ -1,6 +1,11 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.views.generic import DetailView
 from django.http import HttpResponse, HttpResponseNotFound
+from django.shortcuts import render_to_response
+from django.template.defaultfilters import stringfilter
+from django.utils.html import conditional_escape
+from django.utils.safestring import mark_safe
+import urllib
 from .models import Visitor
 import json
 
@@ -37,3 +42,12 @@ def register_visitor(request, slug):
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
         return HttpResponseNotFound()
+
+def register_new(request):
+    context = {'qrcode_url': qrcode('http://descartes:8000/register/')}
+
+    return render_to_response('restaurant/register.html', context)
+
+@stringfilter
+def qrcode(value):
+    return "http://chart.apis.google.com/chart?" + urllib.urlencode({'chs':'500x500', 'cht':'qr', 'chl':value})
