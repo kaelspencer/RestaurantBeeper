@@ -17,11 +17,14 @@ namespace RestaurantBeeper
     {
         public static bool IsWaiting { get; set; }
         public static string UserKey { get; set; }
+        public static string RestaurantName { get; set; }
+        public static string GuestName { get; set; }
+        public static int NumberOfGuests { get; set; }
+        public static int StartTimeToWait { get; set; }
+        public static int LastTimeToWait { get; set; }
         public static Uri HostUri { get; set; }
         public static Uri RegistrationUri { get; set; }
         public static Uri RetrievalUri { get; set; }
-        public static int StartTimeToWait { get; set; }
-        public static int LastTimeToWait { get; set; }
         public static DateTime TimeStarted { get; set; }
         public static DateTime TimeLastChecked { get; set; }
         public static DateTime TimeExpected { get; set; }

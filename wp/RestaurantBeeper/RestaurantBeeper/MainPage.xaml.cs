@@ -9,37 +9,6 @@ using System.IO.IsolatedStorage;
 
 namespace RestaurantBeeper
 {
-    public class RetrievedHeader
-    {
-        public int code { get; set; }
-        public string message { get; set; }
-        public RetrievedData data { get; set; }
-    }
-
-    public class RetrievedData
-    {
-        public int time_to_wait { get; set; }
-        public int guests { get; set; }
-        public string name { get; set; }
-        public string key { get; set; }
-        public string restaurant { get; set; }
-    }
-
-    public class RegistrationData
-    {
-        public string poll_url { get; set; }
-    }
-
-    public static class UserURLs
-    {
-        /// <summary>
-        /// The URL to hit when registering the user. Use String.Format() to insert the provided key
-        /// </summary>
-        public static Uri HostUri { get; set; }
-        public static Uri RegistrationUri { get; set; }
-        public static Uri RetrievalUri { get; set; }
-    }
-
     public partial class MainPage : PhoneApplicationPage
     {
 
@@ -71,7 +40,6 @@ namespace RestaurantBeeper
             {
                 // TODO: Navigate to waiting page
             }
-
         }
 
         // Load data for the ViewModel Items
@@ -107,7 +75,7 @@ namespace RestaurantBeeper
                     return false;
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
@@ -248,6 +216,20 @@ namespace RestaurantBeeper
                 if (codeData.code == 0)
                 {
                     // TODO: Move on here...
+                    UserSettings.IsWaiting = true;
+                    UserSettings.UserKey = codeData.data.key;
+                    UserSettings.RestaurantName = codeData.data.restaurant;
+                    UserSettings.GuestName = codeData.data.name;
+                    UserSettings.NumberOfGuests = codeData.data.guests;
+                    UserSettings.HostUri = UserURLs.HostUri;
+                    UserSettings.RegistrationUri = UserURLs.RegistrationUri;
+                    UserSettings.RetrievalUri = UserURLs.RetrievalUri;
+                    UserSettings.StartTimeToWait = codeData.data.time_to_wait;
+                    UserSettings.LastTimeToWait = codeData.data.time_to_wait;
+                    UserSettings.TimeStarted = DateTime.Now;
+                    UserSettings.TimeLastChecked = DateTime.Now;
+                    UserSettings.TimeExpected = DateTime.Now.AddMinutes(codeData.data.time_to_wait);
+
                     MessageBox.Show(String.Format("Restaurant: {0}, Guests: {1}, Name: {2}, Time To Wait: {3}, Key: {4}", codeData.data.restaurant, codeData.data.guests, codeData.data.name, codeData.data.time_to_wait, codeData.data.key));
                 }
                 else
@@ -285,6 +267,25 @@ namespace RestaurantBeeper
             streamReader.Close();
 
             return codeData;
+        }
+
+        private void button1_Click(object sender, RoutedEventArgs e)
+        {
+            UserSettings.IsWaiting = true;
+            UserSettings.UserKey = "ABC";
+            UserSettings.RestaurantName = "BuffaloWildWings";
+            UserSettings.GuestName = "Jimbo";
+            UserSettings.NumberOfGuests = 3;
+            UserSettings.HostUri = UserURLs.HostUri;
+            UserSettings.RegistrationUri = UserURLs.RegistrationUri;
+            UserSettings.RetrievalUri = UserURLs.RetrievalUri;
+            UserSettings.StartTimeToWait = 40;
+            UserSettings.LastTimeToWait = 20;
+            UserSettings.TimeStarted = DateTime.Now;
+            UserSettings.TimeLastChecked = DateTime.Now;
+            UserSettings.TimeExpected = DateTime.Now.AddMinutes(UserSettings.LastTimeToWait);
+
+            NavigationService.Navigate(new Uri("/WaitingPage.xaml", UriKind.Relative));
         }
     }
 }

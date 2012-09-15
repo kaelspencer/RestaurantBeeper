@@ -34,6 +34,7 @@
             <TextBlock Height="30" HorizontalAlignment="Left" Margin="12,463,0,0" Name="textBlockResult" Text="No result." VerticalAlignment="Top" Width="438" />
             <HyperlinkButton Content="Having trouble scanning? Tap here." Height="30" HorizontalAlignment="Left" Margin="93,499,0,0" Name="hyperlinkButton1" VerticalAlignment="Top" Width="373" Click="hyperlinkButton1_Click" />
             <Button Content="Waiting for a code" Height="72" HorizontalAlignment="Left" Margin="56,390,0,0" Name="buttonWaiting" VerticalAlignment="Top" Width="341" IsEnabled="False" Click="buttonWaiting_Click" />
+            <Button Content="Button" Height="72" HorizontalAlignment="Left" Margin="0,6,0,0" Name="button1" VerticalAlignment="Top" Width="100" Click="button1_Click" />
         </Grid>
     </Grid>
 
