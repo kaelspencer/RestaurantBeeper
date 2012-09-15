@@ -1,7 +1,6 @@
 # Django settings for RestaurantBeeperWeb project.
 
-DEBUG = True
-TEMPLATE_DEBUG = DEBUG
+import json
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -9,16 +8,27 @@ ADMINS = (
 
 MANAGERS = ADMINS
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': '',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
-    }
-}
+# TODO Kael: Figure out production later when there is actually production.
+PRODUCTION = False
+
+if PRODUCTION:
+    print "Production: true"
+else:
+    print "Production: false"
+
+SECRETS = json.load(open('secrets.json'))
+SECRET_KEY = str(SECRETS['secret_key'])
+
+if PRODUCTION:
+    DATABASES = SECRETS['databases_production']
+
+    DEBUG = False
+    TEMPLATE_DEBUG = False
+else:
+    DATABASES = SECRETS['databases_debug']
+
+    DEBUG = True
+    TEMPLATE_DEBUG = True
 
 # Local time zone for this installation. Choices can be found here:
 # http://en.wikipedia.org/wiki/List_of_tz_zones_by_name
@@ -76,9 +86,6 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
-
-# Make this unique, and don't share it with anybody.
-SECRET_KEY = '%22cbdimwpr(o%^%dw9=viwy%monaq$y(2%61xuj_u9cj@0z42'
 
 # List of callables that know how to import templates from various sources.
 TEMPLATE_LOADERS = (
