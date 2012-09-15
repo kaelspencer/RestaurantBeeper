@@ -1,24 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
-using Microsoft.Phone.Controls;
-using Microsoft.Phone.Shell;
 using System.IO;
-using System.Runtime.Serialization;
+using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
+using System.Windows;
+using Microsoft.Phone.Controls;
+using System.IO.IsolatedStorage;
 
 namespace RestaurantBeeper
 {
-    public class CodeData
+    public class RetrievedHeader
+    {
+        public int code { get; set; }
+        public string message { get; set; }
+        public RetrievedData data { get; set; }
+    }
+
+    public class RetrievedData
     {
         public int time_to_wait { get; set; }
         public int guests { get; set; }
@@ -27,8 +25,26 @@ namespace RestaurantBeeper
         public string restaurant { get; set; }
     }
 
+    public class RegistrationData
+    {
+        public string poll_url { get; set; }
+    }
+
+    public static class UserURLs
+    {
+        /// <summary>
+        /// The URL to hit when registering the user. Use String.Format() to insert the provided key
+        /// </summary>
+        public static Uri HostUri { get; set; }
+        public static Uri RegistrationUri { get; set; }
+        public static Uri RetrievalUri { get; set; }
+    }
+
     public partial class MainPage : PhoneApplicationPage
     {
+
+        private IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
+
         // Constructor
         public MainPage()
         {
@@ -51,7 +67,11 @@ namespace RestaurantBeeper
             this.qrScanner.Visibility = Visibility.Collapsed;
             this.qrScanner.StopScanning();
 
-            this.buttonWaiting.IsEnabled = true;
+            if (this.TryLoadSettings())
+            {
+                // TODO: Navigate to waiting page
+            }
+
         }
 
         // Load data for the ViewModel Items
@@ -60,6 +80,36 @@ namespace RestaurantBeeper
             if (!App.ViewModel.IsDataLoaded)
             {
                 App.ViewModel.LoadData();
+            }
+        }
+
+        private bool TryLoadSettings()
+        {
+            try
+            {
+                UserSettings.IsWaiting = (bool)isolatedStorageSettings["IsWaiting"];
+                if (UserSettings.IsWaiting)
+                {
+                    UserSettings.UserKey = (string)isolatedStorageSettings["Key"];
+                    UserSettings.HostUri = (Uri)isolatedStorageSettings["HostUri"];
+                    UserSettings.RegistrationUri = (Uri)isolatedStorageSettings["RegistrationUri"];
+                    UserSettings.RetrievalUri = (Uri)isolatedStorageSettings["RetrievalUri"];
+                    UserSettings.StartTimeToWait = (int)isolatedStorageSettings["StartTimeToWait"];
+                    UserSettings.LastTimeToWait = (int)isolatedStorageSettings["LastTimeToWait"];
+                    UserSettings.TimeStarted = (DateTime)isolatedStorageSettings["TimeStarted"];
+                    UserSettings.TimeLastChecked = (DateTime)isolatedStorageSettings["TimeLastChecked"];
+                    UserSettings.TimeExpected = (DateTime)isolatedStorageSettings["TimeExpected"];
+
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                return false;
             }
         }
 
@@ -82,7 +132,7 @@ namespace RestaurantBeeper
 
         private void QRCodeScanner_ScanComplete(object sender, JeffWilcox.Controls.ScanCompleteEventArgs e)
         {
-            CodeRetrieved(e.Result);
+            this.CodeRetrieved(e.Result);
             this.qrScanner.StopScanning();
             this.qrScanner.StartScanning();
 
@@ -117,7 +167,7 @@ namespace RestaurantBeeper
             // Check to see if the page is navigated to from another page (e.g. the manual code entry page)
             if (NavigationContext.QueryString.TryGetValue("ManualCode", out result))
             {
-                CodeRetrieved(result);
+                this.CodeRetrieved(result);
 
                 // While there are pages on the backstack, clear them out.
                 while (NavigationService.CanGoBack)
@@ -127,46 +177,114 @@ namespace RestaurantBeeper
             }
         }
 
-        private void CodeRetrieved(string code)
+        private void CodeRetrieved(string result)
         {
-            this.textBlockResult.Text = code;
+            this.textBlockResult.Text = result;
+            UserURLs.RegistrationUri = new Uri(result);
+
+            UriBuilder uriBuilder = new UriBuilder(result);
+            if (!String.IsNullOrEmpty(uriBuilder.Query))
+            {
+                uriBuilder.Query = String.Empty;
+            }
+
+            if (!String.IsNullOrEmpty(uriBuilder.Path))
+            {
+                uriBuilder.Path = String.Empty;
+            }
+
+            UserURLs.HostUri = uriBuilder.Uri;
         }
 
         private void buttonWaiting_Click(object sender, RoutedEventArgs e)
         {
-            // TODO: Put this in a better place
-            DownloadStringCompleted(null, null);
-            return;
-            WebClient webClient = new WebClient();
-            webClient.DownloadStringAsync(new Uri(@"http://descartes:8000/get/IL0LQO9ipGNEisHHmhhz/"));
-            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DownloadStringCompleted);
+            RegisterUser();
         }
 
-        void DownloadStringCompleted(object sender, DownloadStringCompletedEventArgs e)
+        private void RegisterUser()
+        {
+            WebClient webClient = new WebClient();
+            webClient.DownloadStringAsync(UserURLs.RegistrationUri);
+            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DownloadRegisterCompleted);
+        }
+
+        private void RetrieveUser()
+        {
+            WebClient webClient = new WebClient();
+            webClient.DownloadStringAsync(UserURLs.RetrievalUri);
+            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DownloadRetrieveCompleted);
+        }
+
+        private void DownloadRegisterCompleted(object sender, DownloadStringCompletedEventArgs e)
         {
             try
             {
-                //string result = e.Result;
-                string result = "{\"time_to_wait\": 45, \"guests\": 1, \"name\": \"Goose\", \"key\": \"IL0LQO9ipGNEisHHmhhz\", \"restaurant\": \"Boom Noodle\"}";
+                string result = e.Result;
 
-                // convert string to stream
-                byte[] byteArray = Encoding.UTF8.GetBytes(result);
-                MemoryStream stream = new MemoryStream(byteArray);
+                RegistrationData registrationData = ParseJson<RegistrationData>(result);
 
-                // Open the stream in a StreamReader
-                StreamReader streamReader = new StreamReader(stream);
-                string json = streamReader.ReadToEnd();
-                var serializer = new DataContractJsonSerializer(typeof(CodeData));
-                CodeData codeData = (CodeData)serializer.ReadObject(stream);
-                streamReader.Close();
+                UriBuilder uriBuilder = new UriBuilder(UserURLs.HostUri);
+                uriBuilder.Path += registrationData.poll_url;
+                UserURLs.RetrievalUri = uriBuilder.Uri;
 
-                MessageBox.Show(String.Format("Restaurant: {0}, Guests: {1}, Name: {2}, Time To Wait: {3}, Key: {4}", codeData.restaurant, codeData.guests, codeData.name, codeData.time_to_wait, codeData.key));
+                MessageBox.Show(UserURLs.RetrievalUri.ToString());
+                this.RetrieveUser();
+
             }
             catch (System.Exception ex)
             {
                 // TODO: Properly handle errors. e.g. 404, not found, etc.
                 MessageBox.Show(ex.Message);
             }
+        }
+
+        private void DownloadRetrieveCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            try
+            {
+                string result = e.Result;
+                RetrievedHeader codeData = ParseJson<RetrievedHeader>(result);
+
+                if (codeData.code == 0)
+                {
+                    // TODO: Move on here...
+                    MessageBox.Show(String.Format("Restaurant: {0}, Guests: {1}, Name: {2}, Time To Wait: {3}, Key: {4}", codeData.data.restaurant, codeData.data.guests, codeData.data.name, codeData.data.time_to_wait, codeData.data.key));
+                }
+                else
+                {
+                    switch (codeData.code)
+                    {
+                        case 1:
+                            // TODO: What's this error code definition?
+                            MessageBox.Show("When attempting to contact the server, we received an error code of '1'. Please try again or ask for assistance.", "Hmm...", MessageBoxButton.OK);
+                            break;
+                        default:
+                            MessageBox.Show(String.Format("When attempting to contact the server, we received an unknown error code of '{0}'. Please try again or ask for assistance.", codeData.code), "Whoops...", MessageBoxButton.OK);
+                            break;
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // TODO: Properly handle errors. e.g. 404, not found, etc.
+                MessageBox.Show(ex.Message);
+            }
+        }
+
+        private T ParseJson<T>(string json)
+        {
+            // convert string to stream
+            byte[] byteArray = Encoding.UTF8.GetBytes(json);
+            MemoryStream stream = new MemoryStream(byteArray);
+
+            // Open the stream in a StreamReader
+            StreamReader streamReader = new StreamReader(stream);
+            string json2 = streamReader.ReadToEnd();
+            var serializer = new DataContractJsonSerializer(typeof(T));
+            T codeData = (T)serializer.ReadObject(stream);
+            streamReader.Close();
+
+            return codeData;
         }
     }
 }
