@@ -33,6 +33,11 @@ class Visitor(models.Model):
         self.key = ''.join(random.choice(string.ascii_letters + string.digits) for x in range(20))
         super(Visitor, self).save(*args, **kwargs)
 
+    def register(self):
+        if not self.registered:
+            self.registered = True
+            super(Visitor, self).save()
+
     def get_dict(self):
         data = dict()
         data['restaurant'] = str(self.restaurant)

@@ -29,10 +29,10 @@ def retrieve_visitor(request, slug):
 def register_visitor(request, slug):
     try:
         visitor = Visitor.objects.get(key=slug)
+        visitor.register()
 
         data = dict()
         data['poll_url'] = visitor.get_poll_url()
-        data['registered'] = visitor.registered
 
         return HttpResponse(json.dumps(data), mimetype='application/json')
     except ObjectDoesNotExist:
