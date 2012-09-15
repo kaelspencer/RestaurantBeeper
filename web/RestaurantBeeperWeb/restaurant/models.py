@@ -53,4 +53,4 @@ class Visitor(models.Model):
         return data
 
     def get_poll_url(self):
-        return '/retrieve/' + self.key + '/'
+        return 'retrieve/' + self.key + '/'
