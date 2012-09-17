@@ -11,69 +11,67 @@ namespace RestaurantBeeper
 {
     public partial class MainPage : PhoneApplicationPage
     {
-
-        private IsolatedStorageSettings isolatedStorageSettings = IsolatedStorageSettings.ApplicationSettings;
+        private bool firstLoad;
+        private bool objectsHidden;
+        private bool skipToWaitingPage;
 
         // Constructor
         public MainPage()
         {
             InitializeComponent();
 
-            // Set the data context of the listbox control to the sample data
-            DataContext = App.ViewModel;
-            this.Loaded += new RoutedEventHandler(MainPage_Loaded);
-
-            //ApplicationBar = new ApplicationBar();
-            //ApplicationBar.Mode = ApplicationBarMode.Default;
-            //ApplicationBar.IsVisible = true;
-            //ApplicationBar.IsMenuEnabled = true;
-
-            //ApplicationBarIconButton button1 = new ApplicationBarIconButton();
-            //button1.IconUri = new Uri("/Images/appbar.add.rest.png", UriKind.Relative);
-            //button1.Text = "New";
-            //ApplicationBar.Buttons.Add(button1);
-
             this.qrScanner.Visibility = Visibility.Collapsed;
             this.qrScanner.StopScanning();
+            
+            firstLoad = true;
 
             if (this.TryLoadSettings())
             {
-                // TODO: Navigate to waiting page
+                this.HideObjects();
+                this.skipToWaitingPage = true;
             }
         }
 
-        // Load data for the ViewModel Items
-        private void MainPage_Loaded(object sender, RoutedEventArgs e)
+        private void HideObjects()
         {
-            if (!App.ViewModel.IsDataLoaded)
-            {
-                App.ViewModel.LoadData();
-            }
+            this.objectsHidden = true;
+
+            this.LayoutRoot.Visibility = Visibility.Collapsed;
+            this.TitlePanel.Visibility = Visibility.Collapsed;
+            this.ApplicationTitle.Visibility = Visibility.Collapsed;
+            this.PageTitle.Visibility = Visibility.Collapsed;
+            this.ContentPanel.Visibility = Visibility.Collapsed;
+            this.qrButton.Visibility = Visibility.Collapsed;
+            this.qrScanner.Visibility = Visibility.Collapsed;
+            this.textBlockResult.Visibility = Visibility.Collapsed;
+            this.hyperlinkButton1.Visibility = Visibility.Collapsed;
+            this.buttonWaiting.Visibility = Visibility.Collapsed;
+            this.button1.Visibility = Visibility.Collapsed;
+        }
+
+        private void ShowObjects()
+        {
+            this.objectsHidden = false;
+
+            this.LayoutRoot.Visibility = Visibility.Visible;
+            this.TitlePanel.Visibility = Visibility.Visible;
+            this.ApplicationTitle.Visibility = Visibility.Visible;
+            this.PageTitle.Visibility = Visibility.Visible;
+            this.ContentPanel.Visibility = Visibility.Visible;
+            this.qrButton.Visibility = Visibility.Visible;
+            this.qrScanner.Visibility = Visibility.Visible;
+            this.textBlockResult.Visibility = Visibility.Visible;
+            this.hyperlinkButton1.Visibility = Visibility.Visible;
+            this.buttonWaiting.Visibility = Visibility.Visible;
+            this.button1.Visibility = Visibility.Visible;
         }
 
         private bool TryLoadSettings()
         {
             try
             {
-                UserSettings.IsWaiting = (bool)isolatedStorageSettings["IsWaiting"];
-                if (UserSettings.IsWaiting)
-                {
-                    UserSettings.UserKey = (string)isolatedStorageSettings["Key"];
-                    UserSettings.HostUri = (Uri)isolatedStorageSettings["HostUri"];
-                    UserSettings.RegistrationUri = (Uri)isolatedStorageSettings["RegistrationUri"];
-                    UserSettings.RetrievalUri = (Uri)isolatedStorageSettings["RetrievalUri"];
-                    UserSettings.StartTimeToWait = (int)isolatedStorageSettings["StartTimeToWait"];
-                    UserSettings.LastTimeToWait = (int)isolatedStorageSettings["LastTimeToWait"];
-                    UserSettings.TimeStarted = (DateTime)isolatedStorageSettings["TimeStarted"];
-                    UserSettings.TimeLastChecked = (DateTime)isolatedStorageSettings["TimeLastChecked"];
-                    UserSettings.TimeExpected = (DateTime)isolatedStorageSettings["TimeExpected"];
-
-                    return true;
-                }
-                else
-                {
-                    return false;
-                }
+                UserSettings userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                return userSettings.IsWaiting;
             }
             catch (Exception)
             {
@@ -166,126 +164,56 @@ namespace RestaurantBeeper
 
         private void buttonWaiting_Click(object sender, RoutedEventArgs e)
         {
-            RegisterUser();
-        }
-
-        private void RegisterUser()
-        {
-            WebClient webClient = new WebClient();
-            webClient.DownloadStringAsync(UserURLs.RegistrationUri);
-            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DownloadRegisterCompleted);
-        }
-
-        private void RetrieveUser()
-        {
-            WebClient webClient = new WebClient();
-            webClient.DownloadStringAsync(UserURLs.RetrievalUri);
-            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DownloadRetrieveCompleted);
-        }
-
-        private void DownloadRegisterCompleted(object sender, DownloadStringCompletedEventArgs e)
-        {
-            try
-            {
-                string result = e.Result;
-
-                RegistrationData registrationData = ParseJson<RegistrationData>(result);
-
-                UriBuilder uriBuilder = new UriBuilder(UserURLs.HostUri);
-                uriBuilder.Path += registrationData.poll_url;
-                UserURLs.RetrievalUri = uriBuilder.Uri;
-
-                MessageBox.Show(UserURLs.RetrievalUri.ToString());
-                this.RetrieveUser();
-
-            }
-            catch (System.Exception ex)
-            {
-                // TODO: Properly handle errors. e.g. 404, not found, etc.
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void DownloadRetrieveCompleted(object sender, DownloadStringCompletedEventArgs e)
-        {
-            try
-            {
-                string result = e.Result;
-                RetrievedHeader codeData = ParseJson<RetrievedHeader>(result);
-
-                if (codeData.code == 0)
-                {
-                    // TODO: Move on here...
-                    UserSettings.IsWaiting = true;
-                    UserSettings.UserKey = codeData.data.key;
-                    UserSettings.RestaurantName = codeData.data.restaurant;
-                    UserSettings.GuestName = codeData.data.name;
-                    UserSettings.NumberOfGuests = codeData.data.guests;
-                    UserSettings.HostUri = UserURLs.HostUri;
-                    UserSettings.RegistrationUri = UserURLs.RegistrationUri;
-                    UserSettings.RetrievalUri = UserURLs.RetrievalUri;
-                    UserSettings.StartTimeToWait = codeData.data.time_to_wait;
-                    UserSettings.LastTimeToWait = codeData.data.time_to_wait;
-                    UserSettings.TimeStarted = DateTime.Now;
-                    UserSettings.TimeLastChecked = DateTime.Now;
-                    UserSettings.TimeExpected = DateTime.Now.AddMinutes(codeData.data.time_to_wait);
-
-                    MessageBox.Show(String.Format("Restaurant: {0}, Guests: {1}, Name: {2}, Time To Wait: {3}, Key: {4}", codeData.data.restaurant, codeData.data.guests, codeData.data.name, codeData.data.time_to_wait, codeData.data.key));
-                }
-                else
-                {
-                    switch (codeData.code)
-                    {
-                        case 1:
-                            // TODO: What's this error code definition?
-                            MessageBox.Show("When attempting to contact the server, we received an error code of '1'. Please try again or ask for assistance.", "Hmm...", MessageBoxButton.OK);
-                            break;
-                        default:
-                            MessageBox.Show(String.Format("When attempting to contact the server, we received an unknown error code of '{0}'. Please try again or ask for assistance.", codeData.code), "Whoops...", MessageBoxButton.OK);
-                            break;
-                    }
-                }
-            }
-            catch (System.Exception ex)
-            {
-                // TODO: Properly handle errors. e.g. 404, not found, etc.
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private T ParseJson<T>(string json)
-        {
-            // convert string to stream
-            byte[] byteArray = Encoding.UTF8.GetBytes(json);
-            MemoryStream stream = new MemoryStream(byteArray);
-
-            // Open the stream in a StreamReader
-            StreamReader streamReader = new StreamReader(stream);
-            string json2 = streamReader.ReadToEnd();
-            var serializer = new DataContractJsonSerializer(typeof(T));
-            T codeData = (T)serializer.ReadObject(stream);
-            streamReader.Close();
-
-            return codeData;
+            DataRetriever.RegisterUser();
         }
 
         private void button1_Click(object sender, RoutedEventArgs e)
-        {
-            UserSettings.IsWaiting = true;
-            UserSettings.UserKey = "ABC";
-            UserSettings.RestaurantName = "BuffaloWildWings";
-            UserSettings.GuestName = "Jimbo";
-            UserSettings.NumberOfGuests = 3;
-            UserSettings.HostUri = UserURLs.HostUri;
-            UserSettings.RegistrationUri = UserURLs.RegistrationUri;
-            UserSettings.RetrievalUri = UserURLs.RetrievalUri;
-            UserSettings.StartTimeToWait = 40;
-            UserSettings.LastTimeToWait = 20;
-            UserSettings.TimeStarted = DateTime.Now;
-            UserSettings.TimeLastChecked = DateTime.Now;
-            UserSettings.TimeExpected = DateTime.Now.AddMinutes(UserSettings.LastTimeToWait);
-
+        {            
             NavigationService.Navigate(new Uri("/WaitingPage.xaml", UriKind.Relative));
+        }
+
+        private void PhoneApplicationPage_Loaded(object sender, RoutedEventArgs e)
+        {
+            // If this isn't the first time the page has been loaded, then the app is being redirected to it.
+            // The objects should be unhidden if this is the case.
+            // TODO: Use params here when navigating back?
+            if (!firstLoad && objectsHidden)
+            {
+                this.ShowObjects();
+            }
+            this.firstLoad = false;
+
+            if (this.skipToWaitingPage)
+            {
+                this.skipToWaitingPage = false;
+                NavigationService.Navigate(new Uri("/WaitingPage.xaml", UriKind.Relative));
+            }
+        }
+
+        private void button2_Click(object sender, RoutedEventArgs e)
+        {
+            InternalStorage.EmptyIsolatedStorage();
+        }
+
+        private void button3_Click(object sender, RoutedEventArgs e)
+        {
+            UserSettings userSettings = new UserSettings();
+            userSettings.IsWaiting = true;
+            userSettings.UserKey = "ABC";
+            userSettings.RestaurantName = "BuffaloWildWings";
+            userSettings.GuestName = "Jimbo";
+            userSettings.NumberOfGuests = 3;
+            userSettings.HostUri = UserURLs.HostUri;
+            userSettings.RegistrationUri = UserURLs.RegistrationUri;
+            userSettings.RetrievalUri = UserURLs.RetrievalUri;
+            userSettings.StartTimeToWait = 40;
+            userSettings.LastTimeToWait = 20;
+            userSettings.TimeStarted = DateTime.Now;
+            userSettings.TimeLastChecked = DateTime.Now;
+            userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
+
+            InternalStorage.SaveToIsolatedStorage("UserSettings", userSettings);
+            InternalStorage.CommitToIsolatedStorage();
         }
     }
 }

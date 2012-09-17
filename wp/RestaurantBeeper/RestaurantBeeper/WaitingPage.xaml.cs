@@ -16,30 +16,54 @@ namespace RestaurantBeeper
 {
     public partial class WaitingPage : PhoneApplicationPage
     {
+        private bool failed;
+        public UserSettings userSettings { get; set; }
+
         public WaitingPage()
         {
             InitializeComponent();
 
+            //TODO: Save the image to isolated storage. This requires saving as a file as a BitmapImage is not serializable
             BitmapImage bitmapImage = new BitmapImage(new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute));
             ImageBrush imageBrush = new ImageBrush();
             imageBrush.ImageSource = bitmapImage;
             this.WaitingPanorama.Background = imageBrush;
 
-            this.textBlockRestaurantName.Text = UserSettings.RestaurantName;
-            this.testBlockGuestName.Text = UserSettings.GuestName;
-            this.textBlockNumberOfGuests.Text = UserSettings.NumberOfGuests.ToString();
-            this.textBlockTimeToWait.Text = UserSettings.LastTimeToWait + "minutes";
-            
-            if (UserSettings.StartTimeToWait > 0 && UserSettings.LastTimeToWait > 0)
+            try
             {
-                this.progressBarWaitTime.IsIndeterminate = false;
-                this.progressBarWaitTime.Value = (((float)UserSettings.StartTimeToWait - (float)UserSettings.LastTimeToWait) / (float)UserSettings.StartTimeToWait) * 100;
+                this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                this.textBlockRestaurantName.Text = userSettings.RestaurantName;
+                this.testBlockGuestName.Text = userSettings.GuestName;
+                this.textBlockNumberOfGuests.Text = userSettings.NumberOfGuests.ToString();
+                this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
+
+                if (userSettings.StartTimeToWait > 0 && userSettings.LastTimeToWait > 0)
+                {
+                    this.progressBarWaitTime.IsIndeterminate = false;
+                    this.progressBarWaitTime.Value = (((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100;
+                }
+
+                failed = false;
+
+                InternalStorage.SaveToIsolatedStorage("Background", bitmapImage);
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again.", "We goofed", MessageBoxButton.OK);
+                failed = true;
             }
         }
 
         private void PhoneApplicationPage_Loaded(object sender, RoutedEventArgs e)
         {
-            ClearBackStack();
+            if (!failed)
+            {
+                ClearBackStack();
+            }
+            else
+            {
+                NavigationService.GoBack();
+            }
         }
 
         private void ClearBackStack()
