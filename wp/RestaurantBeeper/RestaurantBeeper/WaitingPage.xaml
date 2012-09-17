@@ -16,10 +16,10 @@
 
     <!--LayoutRoot contains the root grid where all other page content is placed-->
     <Grid x:Name="LayoutRoot">
-        <controls:Panorama Name="WaitingPanorama"  Title="waiting" Foreground="Yellow" OpacityMask="Black">
+        <controls:Panorama Name="WaitingPanorama"  Title="waiting" Foreground="Yellow" OpacityMask="Black" CacheMode="BitmapCache">
 
             <!--Panorama item one-->
-            <controls:PanoramaItem Header="Restaurant" Foreground="#FFFEE300">
+            <controls:PanoramaItem Header="Restaurant" Foreground="#FFFEE300" CacheMode="BitmapCache">
                 <Grid>
                     <StackPanel Height="498" HorizontalAlignment="Left" Margin="0,0,0,0" Name="stackPanel1" VerticalAlignment="Top" Width="419">
                         <TextBlock Height="50" Name="textBlockRestaurantName" Text="[RestaurantName]" Foreground="#FFFEE300" FontSize="30" />

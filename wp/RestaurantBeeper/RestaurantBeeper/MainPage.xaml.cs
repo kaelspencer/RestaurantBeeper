@@ -20,16 +20,26 @@ namespace RestaurantBeeper
         {
             InitializeComponent();
 
+            //InternalStorage.EmptyIsolatedStorage();
+            //InternalStorage.CommitToIsolatedStorage();
+
             this.qrScanner.Visibility = Visibility.Collapsed;
             this.qrScanner.StopScanning();
             
             firstLoad = true;
 
-            if (this.TryLoadSettings())
-            {
-                this.HideObjects();
-                this.skipToWaitingPage = true;
-            }
+            // If there are saved settings, then the user is probably already waiting for a reservation.
+            // If so, then they should be directed directly to the waiting page. However, this cannot be done
+            // in the constructor (the NavigationService is not available yet) but can be done in the Loaded event. 
+            // Unfortunately, this makes for a flash of objects on the screen while the app navigates away.
+            // Therefore, the following will change all the objects on the main page to a collapsed visibility (hidden)
+            // and set the skipToWaitingPage bool so that the Loaded event can catch it and automatically
+            // navigate to the appropriate page.
+            //if (this.TryLoadSettings())
+            //{
+            //    this.HideObjects();
+            //    this.skipToWaitingPage = true;
+            //}
         }
 
         private void HideObjects()
@@ -176,7 +186,7 @@ namespace RestaurantBeeper
         {
             // If this isn't the first time the page has been loaded, then the app is being redirected to it.
             // The objects should be unhidden if this is the case.
-            // TODO: Use params here when navigating back?
+            // TODO: Use params here when navigating back just to be sure?
             if (!firstLoad && objectsHidden)
             {
                 this.ShowObjects();
@@ -192,7 +202,14 @@ namespace RestaurantBeeper
 
         private void button2_Click(object sender, RoutedEventArgs e)
         {
-            InternalStorage.EmptyIsolatedStorage();
+            try
+            {
+                InternalStorage.EmptyIsolatedStorage();
+            }
+            catch (System.Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void button3_Click(object sender, RoutedEventArgs e)
@@ -211,6 +228,9 @@ namespace RestaurantBeeper
             userSettings.TimeStarted = DateTime.Now;
             userSettings.TimeLastChecked = DateTime.Now;
             userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
+            //userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
+            userSettings.RestaurantImagePath = new Uri("http://wac.450f.edgecastcdn.net/80450F/103gbfrocks.com/files/2011/11/Buffalo-Wild-Wings-wings.jpg", UriKind.Absolute);
+            userSettings.RestaurantImageName = "Image2.jpg";
 
             InternalStorage.SaveToIsolatedStorage("UserSettings", userSettings);
             InternalStorage.CommitToIsolatedStorage();

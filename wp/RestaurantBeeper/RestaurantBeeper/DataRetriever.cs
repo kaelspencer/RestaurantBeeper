@@ -4,6 +4,7 @@ using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
 using System.Windows;
+using System.Windows.Resources;
 
 namespace RestaurantBeeper
 {
@@ -11,6 +12,7 @@ namespace RestaurantBeeper
     {
         public delegate void CallBackOnRegistration();
         public delegate void CallBackOnRetrieval(UserSettings userSettings);
+        public delegate void CallBackOnImageRetrieval(byte[] image);
 
         /// <summary>
         /// The method to call after the user is successfully registered
@@ -32,6 +34,11 @@ namespace RestaurantBeeper
         /// </summary>
         public static CallBackOnRetrieval DataRetrievedFailure { get; set; }
 
+        /// <summary>
+        /// The method to call after an image has been downloaded
+        /// </summary>
+        public static CallBackOnImageRetrieval ImageRetrieved { get; set; }
+
         public static void RegisterUser()
         {
             WebClient webClient = new WebClient();
@@ -44,6 +51,28 @@ namespace RestaurantBeeper
             WebClient webClient = new WebClient();
             webClient.DownloadStringAsync(UserURLs.RetrievalUri);
             webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DataRetriever.DownloadRetrieveCompleted);
+        }
+
+        public static void GetImageFile(Uri imageUri)
+        {
+            WebClient client = new WebClient();
+            client.OpenReadCompleted += new OpenReadCompletedEventHandler(DownloadImageCompleted);
+            client.OpenReadAsync(imageUri);
+        }
+
+
+        public static void DownloadImageCompleted(object sender, OpenReadCompletedEventArgs e)
+        {
+            var resInfo = new StreamResourceInfo(e.Result, null);
+            var reader = new StreamReader(resInfo.Stream);
+            byte[] contents;
+            
+            using (BinaryReader bReader = new BinaryReader(reader.BaseStream))
+            {
+                contents = bReader.ReadBytes((int)reader.BaseStream.Length);
+            }
+
+            ImageRetrieved(contents);
         }
 
         public static void DownloadRegisterCompleted(object sender, DownloadStringCompletedEventArgs e)
@@ -69,7 +98,7 @@ namespace RestaurantBeeper
             {
                 // TODO: Properly handle errors. e.g. 404, not found, etc.
                 MessageBox.Show(ex.Message);
-                
+
                 if (DataRetriever.UserRegisteredFailure != null)
                 {
                     DataRetriever.UserRegisteredFailure();

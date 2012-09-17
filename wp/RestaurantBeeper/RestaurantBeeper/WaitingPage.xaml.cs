@@ -22,13 +22,6 @@ namespace RestaurantBeeper
         public WaitingPage()
         {
             InitializeComponent();
-
-            //TODO: Save the image to isolated storage. This requires saving as a file as a BitmapImage is not serializable
-            BitmapImage bitmapImage = new BitmapImage(new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute));
-            ImageBrush imageBrush = new ImageBrush();
-            imageBrush.ImageSource = bitmapImage;
-            this.WaitingPanorama.Background = imageBrush;
-
             try
             {
                 this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
@@ -43,15 +36,59 @@ namespace RestaurantBeeper
                     this.progressBarWaitTime.Value = (((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100;
                 }
 
-                failed = false;
+                // Try to load the image from internal storage
+                BitmapImage bitmapImage = null;
+                try
+                {
+                    // Try to load the image from internal storage in case we already have it
+                    bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
 
-                InternalStorage.SaveToIsolatedStorage("Background", bitmapImage);
+                    if (bitmapImage != null)
+                    {
+                        ImageBrush imageBrush = new ImageBrush();
+                        imageBrush.ImageSource = bitmapImage;
+                        this.WaitingPanorama.Background = imageBrush;
+                    }
+                    else
+                    {
+                        throw new NullReferenceException();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Something went wrong while trying to retrieve the image from internal storage. 
+                    // Try to download and save the image
+                    try
+                    {
+                        DataRetriever.CallBackOnImageRetrieval ImageRetrieved = new DataRetriever.CallBackOnImageRetrieval(this.ImageReady);
+                        DataRetriever.ImageRetrieved = ImageRetrieved;
+
+                        DataRetriever.GetImageFile(this.userSettings.RestaurantImagePath);
+                    }
+                    catch (System.Exception ex2)
+                    {
+                        MessageBox.Show(ex2.Message);
+                    }
+                }
+
+                failed = false;
             }
-            catch (System.Exception ex)
+            catch (Exception)
             {
                 MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again.", "We goofed", MessageBoxButton.OK);
                 failed = true;
             }
+        }
+
+        private void ImageReady(byte[] imageContents)
+        {
+            if (InternalStorage.SaveImage(this.userSettings.RestaurantImageName, imageContents))
+            {
+                BitmapImage bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
+                ImageBrush imageBrush = new ImageBrush();
+                imageBrush.ImageSource = bitmapImage;
+                this.WaitingPanorama.Background = imageBrush;
+            }            
         }
 
         private void PhoneApplicationPage_Loaded(object sender, RoutedEventArgs e)
