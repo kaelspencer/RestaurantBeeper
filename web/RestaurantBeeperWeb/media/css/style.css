@@ -1,1 +1,5 @@
-@import url(text.css)
+@import url(text.css);
+
+body {
+    background: #d5ded9 url(../images/noise.png);
+}
