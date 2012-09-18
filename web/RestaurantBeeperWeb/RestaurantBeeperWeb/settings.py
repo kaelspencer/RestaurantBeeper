@@ -2,6 +2,7 @@
 
 from unipath import FSPath as Path
 import json
+import platform
 
 ADMINS = (
     # ('Your Name', 'your_email@example.com'),
@@ -11,8 +12,9 @@ BASE = Path(__file__).absolute().ancestor(2)
 
 MANAGERS = ADMINS
 
-# TODO Kael: Figure out production later when there is actually production.
-PRODUCTION = False
+# Presume that only the production server will run on hoth
+# This isn't the best longterm solution.
+PRODUCTION = ("hoth" in platform.node())
 
 if PRODUCTION:
     print "Production: true"
