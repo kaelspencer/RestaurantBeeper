@@ -1,7 +1,7 @@
-http://www.colourlovers.com/palette/77121/Good_Friends
+http://www.colourlovers.com/palette/129595/Chocolate_Labrador
 
-Innocence:  #d9ceb2 (217, 206, 178)
-Kind Giant: #948c75 (148, 140, 117)
-Bond:       #d5ded9 (213, 222, 217)
-Pachyderm:  #7a6a53 (122, 106, 83)
-Forever:    #99b2b7 (153, 178, 183)
+Cocoa Bean: rgb(46, 34, 31)
+Cool Vanilla: rgb(241, 238, 217)
+Potato Chip: rgb(247, 237, 191)
+Warm Chocolate: rgb(88, 53, 26)
+Dark Chocolate: rgb(56, 35, 19)
