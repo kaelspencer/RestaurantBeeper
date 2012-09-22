@@ -27,8 +27,8 @@ namespace RestaurantBeeper
 
             if (this.TryLoadSettings())
             {
-                //this.InitWaitingPano();
-                //SetDefaultPanoPage(PanoPages.Wait);
+                this.InitWaitingPano();
+                SetDefaultPanoPage(PanoPages.Wait);
             }
         }
 
