@@ -182,5 +182,23 @@ namespace RestaurantBeeper
 
             return codeData;
         }
+
+        public static void CodeRetrieved(string result)
+        {
+            UserURLs.RegistrationUri = new Uri(result);
+
+            UriBuilder uriBuilder = new UriBuilder(result);
+            if (!String.IsNullOrEmpty(uriBuilder.Query))
+            {
+                uriBuilder.Query = String.Empty;
+            }
+
+            if (!String.IsNullOrEmpty(uriBuilder.Path))
+            {
+                uriBuilder.Path = String.Empty;
+            }
+
+            UserURLs.HostUri = uriBuilder.Uri;
+        }
     }
 }

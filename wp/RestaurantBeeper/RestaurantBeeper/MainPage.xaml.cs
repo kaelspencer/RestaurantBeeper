@@ -6,6 +6,10 @@ using System.Text;
 using System.Windows;
 using Microsoft.Phone.Controls;
 using System.IO.IsolatedStorage;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.ComponentModel;
+using JeffWilcox.Controls;
 
 namespace RestaurantBeeper
 {
@@ -14,66 +18,18 @@ namespace RestaurantBeeper
         private bool firstLoad;
         private bool objectsHidden;
         private bool skipToWaitingPage;
+        private enum PanoPages { Reserve = 0, Wait, Action, Offers, Info, Help}
 
         // Constructor
         public MainPage()
         {
             InitializeComponent();
 
-            //InternalStorage.EmptyIsolatedStorage();
-            //InternalStorage.CommitToIsolatedStorage();
-
-            this.qrScanner.Visibility = Visibility.Collapsed;
-            this.qrScanner.StopScanning();
-            
-            firstLoad = true;
-
-            // If there are saved settings, then the user is probably already waiting for a reservation.
-            // If so, then they should be directed directly to the waiting page. However, this cannot be done
-            // in the constructor (the NavigationService is not available yet) but can be done in the Loaded event. 
-            // Unfortunately, this makes for a flash of objects on the screen while the app navigates away.
-            // Therefore, the following will change all the objects on the main page to a collapsed visibility (hidden)
-            // and set the skipToWaitingPage bool so that the Loaded event can catch it and automatically
-            // navigate to the appropriate page.
-            //if (this.TryLoadSettings())
-            //{
-            //    this.HideObjects();
-            //    this.skipToWaitingPage = true;
-            //}
-        }
-
-        private void HideObjects()
-        {
-            this.objectsHidden = true;
-
-            this.LayoutRoot.Visibility = Visibility.Collapsed;
-            this.TitlePanel.Visibility = Visibility.Collapsed;
-            this.ApplicationTitle.Visibility = Visibility.Collapsed;
-            this.PageTitle.Visibility = Visibility.Collapsed;
-            this.ContentPanel.Visibility = Visibility.Collapsed;
-            this.qrButton.Visibility = Visibility.Collapsed;
-            this.qrScanner.Visibility = Visibility.Collapsed;
-            this.textBlockResult.Visibility = Visibility.Collapsed;
-            this.hyperlinkButton1.Visibility = Visibility.Collapsed;
-            this.buttonWaiting.Visibility = Visibility.Collapsed;
-            this.button1.Visibility = Visibility.Collapsed;
-        }
-
-        private void ShowObjects()
-        {
-            this.objectsHidden = false;
-
-            this.LayoutRoot.Visibility = Visibility.Visible;
-            this.TitlePanel.Visibility = Visibility.Visible;
-            this.ApplicationTitle.Visibility = Visibility.Visible;
-            this.PageTitle.Visibility = Visibility.Visible;
-            this.ContentPanel.Visibility = Visibility.Visible;
-            this.qrButton.Visibility = Visibility.Visible;
-            this.qrScanner.Visibility = Visibility.Visible;
-            this.textBlockResult.Visibility = Visibility.Visible;
-            this.hyperlinkButton1.Visibility = Visibility.Visible;
-            this.buttonWaiting.Visibility = Visibility.Visible;
-            this.button1.Visibility = Visibility.Visible;
+            if (this.TryLoadSettings())
+            {
+                //this.InitWaitingPano();
+                //SetDefaultPanoPage(PanoPages.Wait);
+            }
         }
 
         private bool TryLoadSettings()
@@ -89,49 +45,9 @@ namespace RestaurantBeeper
             }
         }
 
-        private void qrButton_Click(object sender, RoutedEventArgs e)
+        private void SetDefaultPanoPage(PanoPages page)
         {
-            switch (this.qrScanner.Visibility)
-            {
-                case Visibility.Collapsed:
-                    // The control was hidden, make it visible and start
-                    this.qrScanner.Visibility = Visibility.Visible;
-                    this.qrScanner.StartScanning();
-                    break;
-                case Visibility.Visible:
-                    // The control was already visible. Treating as toggle.
-                    this.qrScanner.StopScanning();
-                    this.qrScanner.Visibility = Visibility.Collapsed;
-                    break;
-            }
-        }
-
-        private void QRCodeScanner_ScanComplete(object sender, JeffWilcox.Controls.ScanCompleteEventArgs e)
-        {
-            this.CodeRetrieved(e.Result);
-            this.qrScanner.StopScanning();
-            this.qrScanner.StartScanning();
-
-            this.buttonWaiting.IsEnabled = true;
-            this.buttonWaiting.Content = "Ready. Tap to continue.";
-        }
-
-        private void QRCodeScanner_Error(object sender, JeffWilcox.Controls.ScanFailureEventArgs e)
-        {
-            MessageBox.Show("There was a problem accessing the camera. Please try again. If that does not work, please close and re-open the app.", "Hmm...", MessageBoxButton.OK);
-        }
-
-        private void hyperlinkButton1_Click(object sender, RoutedEventArgs e)
-        {
-            MessageBoxResult messageboxResult = MessageBox.Show("If you're having trouble scanning, we can try to enter a code manually.", "Having trouble?", MessageBoxButton.OKCancel);
-
-            // If the user opted to continue with manual code entry, stop the QR scanner and change pages to the manual code entry page
-            if (messageboxResult == MessageBoxResult.OK)
-            {
-                this.qrScanner.StopScanning();
-                this.qrScanner.Visibility = Visibility.Collapsed;
-                NavigationService.Navigate(new Uri("/ManualCodePage.xaml", UriKind.Relative));
-            }
+            this.MainPano.DefaultItem = this.MainPano.Items[(int)page];
         }
 
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
@@ -143,97 +59,112 @@ namespace RestaurantBeeper
             // Check to see if the page is navigated to from another page (e.g. the manual code entry page)
             if (NavigationContext.QueryString.TryGetValue("ManualCode", out result))
             {
-                this.CodeRetrieved(result);
+                DataRetriever.CodeRetrieved(result);
 
-                // While there are pages on the backstack, clear them out.
-                while (NavigationService.CanGoBack)
+                // Clear out the backstack
+                this.ClearBackStack();
+            }
+        }
+
+        // WAITING PAGE LOGIC
+        private bool failed;
+        public UserSettings userSettings { get; set; }
+        private ImageBrush imageBrush;
+
+        public void InitWaitingPano()
+        {
+            try
+            {
+                this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                this.textBlockRestaurantName.Text = userSettings.RestaurantName;
+                this.testBlockGuestName.Text = userSettings.GuestName;
+                this.textBlockNumberOfGuests.Text = userSettings.NumberOfGuests.ToString();
+                this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
+
+                if (userSettings.StartTimeToWait > 0 && userSettings.LastTimeToWait > 0)
                 {
-                    NavigationService.RemoveBackEntry();
+                    this.progressBarWaitTime.IsIndeterminate = false;
+                    this.progressBarWaitTime.Value = (((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100;
+                }
+
+                // TODO: Loading a background image into the pano causes the app to chug... Figure out why and how to fix it.
+                LoadImage();
+
+                failed = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again. " + ex.Message, "We goofed", MessageBoxButton.OK);
+                failed = true;
+            }
+        }
+
+        private void LoadImage ()
+        {
+            // Try to load the image from internal storage
+            BitmapImage bitmapImage = null;
+            try
+            {
+                // Try to load the image from internal storage in case we already have it
+                bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
+
+                if (bitmapImage != null)
+                {
+                    this.imageBrush = new ImageBrush();
+                    this.imageBrush.ImageSource = bitmapImage;
+                    SetPanoBackground();
+                }
+                else
+                {
+                    throw new NullReferenceException();
+                }
+            }
+            catch (Exception)
+            {
+                // Something went wrong while trying to retrieve the image from internal storage. 
+                // Try to download and save the image
+                try
+                {
+                    DataRetriever.CallBackOnImageRetrieval imageRetrieved = new DataRetriever.CallBackOnImageRetrieval(this.ImageReady);
+                    DataRetriever.ImageRetrieved = imageRetrieved;
+
+                    DataRetriever.GetImageFile(this.userSettings.RestaurantImagePath);
+                }
+                catch (System.Exception ex2)
+                {
+                    MessageBox.Show(ex2.Message);
                 }
             }
         }
 
-        private void CodeRetrieved(string result)
+        private void ImageReady(byte[] imageContents)
         {
-            this.textBlockResult.Text = result;
-            UserURLs.RegistrationUri = new Uri(result);
-
-            UriBuilder uriBuilder = new UriBuilder(result);
-            if (!String.IsNullOrEmpty(uriBuilder.Query))
+            if (InternalStorage.SaveImage(this.userSettings.RestaurantImageName, imageContents))
             {
-                uriBuilder.Query = String.Empty;
-            }
-
-            if (!String.IsNullOrEmpty(uriBuilder.Path))
-            {
-                uriBuilder.Path = String.Empty;
-            }
-
-            UserURLs.HostUri = uriBuilder.Uri;
+                BitmapImage bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
+                this.imageBrush = new ImageBrush();
+                this.imageBrush.ImageSource = bitmapImage;
+                SetPanoBackground();
+            }            
         }
 
-        private void buttonWaiting_Click(object sender, RoutedEventArgs e)
+        private void SetPanoBackground ()
         {
-            DataRetriever.RegisterUser();
+            this.MainPano.Background = this.imageBrush;
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
-        {            
-            NavigationService.Navigate(new Uri("/WaitingPage.xaml", UriKind.Relative));
-        }
-
-        private void PhoneApplicationPage_Loaded(object sender, RoutedEventArgs e)
+        private void ClearBackStack()
         {
-            // If this isn't the first time the page has been loaded, then the app is being redirected to it.
-            // The objects should be unhidden if this is the case.
-            // TODO: Use params here when navigating back just to be sure?
-            if (!firstLoad && objectsHidden)
+            // While there are pages on the backstack, clear them out.
+            while (NavigationService.CanGoBack)
             {
-                this.ShowObjects();
-            }
-            this.firstLoad = false;
-
-            if (this.skipToWaitingPage)
-            {
-                this.skipToWaitingPage = false;
-                NavigationService.Navigate(new Uri("/WaitingPage.xaml", UriKind.Relative));
+                NavigationService.RemoveBackEntry();
             }
         }
 
-        private void button2_Click(object sender, RoutedEventArgs e)
+        private void ApplicationBarIconButton_Click(object sender, EventArgs e)
         {
-            try
-            {
-                InternalStorage.EmptyIsolatedStorage();
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
-        }
-
-        private void button3_Click(object sender, RoutedEventArgs e)
-        {
-            UserSettings userSettings = new UserSettings();
-            userSettings.IsWaiting = true;
-            userSettings.UserKey = "ABC";
-            userSettings.RestaurantName = "BuffaloWildWings";
-            userSettings.GuestName = "Jimbo";
-            userSettings.NumberOfGuests = 3;
-            userSettings.HostUri = UserURLs.HostUri;
-            userSettings.RegistrationUri = UserURLs.RegistrationUri;
-            userSettings.RetrievalUri = UserURLs.RetrievalUri;
-            userSettings.StartTimeToWait = 40;
-            userSettings.LastTimeToWait = 20;
-            userSettings.TimeStarted = DateTime.Now;
-            userSettings.TimeLastChecked = DateTime.Now;
-            userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
-            //userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
-            userSettings.RestaurantImagePath = new Uri("http://wac.450f.edgecastcdn.net/80450F/103gbfrocks.com/files/2011/11/Buffalo-Wild-Wings-wings.jpg", UriKind.Absolute);
-            userSettings.RestaurantImageName = "Image2.jpg";
-
-            InternalStorage.SaveToIsolatedStorage("UserSettings", userSettings);
-            InternalStorage.CommitToIsolatedStorage();
+            NavigationService.Navigate(new Uri("/ScanPage.xaml", UriKind.Relative));
         }
     }
 }
