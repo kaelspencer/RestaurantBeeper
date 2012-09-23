@@ -13,7 +13,7 @@
     FontSize="{StaticResource PhoneFontSizeNormal}"
     Foreground="{StaticResource PhoneForegroundBrush}"
     SupportedOrientations="Portrait"  Orientation="Portrait"
-    shell:SystemTray.IsVisible="True">
+    shell:SystemTray.IsVisible="True" Unloaded="PhoneApplicationPage_Unloaded" xmlns:toolkit="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls.Toolkit">
 
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
@@ -22,23 +22,21 @@
             <!--Pivot item one-->
             <controls:PivotItem Header="Scan">
                 <Grid>
-                    <Button Content="Tap here to Scan" Height="72" Margin="86,79,120,0" Name="qrButton" VerticalAlignment="Top" Click="qrButton_Click" Width="250" />
-                    <TextBlock Height="30" HorizontalAlignment="Left" Margin="3,549,0,0" Name="textBlockResult" Text="No result." VerticalAlignment="Top" Width="391" />
-                    <HyperlinkButton Content="Having trouble scanning? Tap here." Height="30" HorizontalAlignment="Left" Margin="91,578,0,0" Name="hyperlinkButton1" VerticalAlignment="Top" Width="373" Click="hyperlinkButton1_Click" />
-                    <Button Content="Waiting for a code" Height="72" HorizontalAlignment="Left" Margin="44,476,0,0" Name="buttonWaiting" VerticalAlignment="Top" Width="341" IsEnabled="False" Click="buttonWaiting_Click" />
-                    <Button Content="Button" Height="72" HorizontalAlignment="Left" Margin="-12,99,0,0" Name="button1" VerticalAlignment="Top" Width="75" Click="button1_Click" />
-                    <Button Content="Button" Height="72" HorizontalAlignment="Left" Margin="-12,54,0,0" Name="button2" VerticalAlignment="Top" Width="75" Click="button2_Click" />
-                    <Button Content="Button" Height="72" HorizontalAlignment="Left" Margin="-12,6,0,0" Name="button3" VerticalAlignment="Top" Width="75" Click="button3_Click" />
-                    <jwqr:QRCodeScanner Name="qrScanner" ScanComplete="QRCodeScanner_ScanComplete" Error="QRCodeScanner_Error" Margin="38,165,58,142" Height="300" />
+                    <TextBlock Height="30" HorizontalAlignment="Left" Margin="8,549,0,0" Name="textBlockResult" Text="No result." VerticalAlignment="Top" Width="440" />
+                    <HyperlinkButton Content="Having trouble scanning? Tap here." Height="30" HorizontalAlignment="Left" Margin="40,578,0,0" Name="hyperlinkButton1" VerticalAlignment="Top" Width="373" Click="hyperlinkButton1_Click" />
+                    <Button Content="Waiting for a code" Height="72" HorizontalAlignment="Left" Margin="56,482,0,0" Name="buttonWaiting" VerticalAlignment="Top" Width="341" IsEnabled="False" Click="buttonWaiting_Click" />
+                    <jwqr:QRCodeScanner Name="qrScanner" ScanComplete="QRCodeScanner_ScanComplete" Error="QRCodeScanner_Error" Margin="23,90,27,117" Height="400" Width="406" />
+                    <toolkit:ToggleSwitch Header="Active QR Code Scanning" Height="111" HorizontalAlignment="Left" Name="toggleSwitch1" VerticalAlignment="Top" Width="456" IsChecked="true" Checked="toggleSwitch1_Checked" Unchecked="toggleSwitch1_Unchecked" Margin="-2,0,0,0" />
+
                 </Grid>
             </controls:PivotItem>
 
             <!--Pivot item two-->
             <controls:PivotItem Header="Manual">
                 <Grid>
-                    <TextBlock TextWrapping="Wrap" Height="63" HorizontalAlignment="Left" Margin="9,6,0,0" Name="textBlock1" Text="We're sorry we can't scan a QR code right now. Please enter the manual code below." VerticalAlignment="Top" Width="429" />
-                    <TextBox Height="72" HorizontalAlignment="Left" Margin="12,75,0,0" Name="textBox1" Text="" VerticalAlignment="Top" Width="426" />
-                    <Button Content="Done" Height="72" HorizontalAlignment="Right" Margin="0,137,25,0" Name="buttonDone" VerticalAlignment="Top" Width="160" Click="buttonDone_Click" />
+                    <TextBlock TextWrapping="Wrap" Height="63" HorizontalAlignment="Left" Margin="8,6,0,0" Name="textBlock1" Text="We're sorry we can't scan a QR code right now. Please enter the manual code below." VerticalAlignment="Top" Width="440" />
+                    <TextBox Height="72" HorizontalAlignment="Left" Margin="8,73,0,0" Name="textBox1" Text="" VerticalAlignment="Top" Width="440" />
+                    <Button Content="Done" Height="72" HorizontalAlignment="Right" Margin="0,145,8,0" Name="buttonDone" VerticalAlignment="Top" Width="160" Click="buttonDone_Click" />
                 </Grid>
             </controls:PivotItem>
         </controls:Pivot>
@@ -55,5 +53,5 @@
             </shell:ApplicationBar.MenuItems>
         </shell:ApplicationBar>
     </phone:PhoneApplicationPage.ApplicationBar>-->
-    
+
 </phone:PhoneApplicationPage>

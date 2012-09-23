@@ -38,23 +38,6 @@ namespace RestaurantBeeper
             }
         }
 
-        private void qrButton_Click(object sender, RoutedEventArgs e)
-        {
-            switch (this.qrScanner.Visibility)
-            {
-                case Visibility.Collapsed:
-                    // The control was hidden, make it visible and start
-                    this.qrScanner.Visibility = Visibility.Visible;
-                    this.qrScanner.StartScanning();
-                    break;
-                case Visibility.Visible:
-                    // The control was already visible. Treating as toggle.
-                    this.qrScanner.StopScanning();
-                    this.qrScanner.Visibility = Visibility.Collapsed;
-                    break;
-            }
-        }
-
         private void QRCodeScanner_ScanComplete(object sender, JeffWilcox.Controls.ScanCompleteEventArgs e)
         {
             DataRetriever.CodeRetrieved(e.Result);
@@ -88,47 +71,21 @@ namespace RestaurantBeeper
             DataRetriever.RegisterUser();
         }
 
-        private void button1_Click(object sender, RoutedEventArgs e)
+        private void PhoneApplicationPage_Unloaded(object sender, RoutedEventArgs e)
         {
-            //this.InitWaitingPano();
-            //SetDefaultPanoPage(PanoPages.Wait);
+            this.qrScanner.StopScanning();
         }
 
-        private void button2_Click(object sender, RoutedEventArgs e)
+        private void toggleSwitch1_Checked(object sender, RoutedEventArgs e)
         {
-            try
-            {
-                //InternalStorage.EmptyIsolatedStorage();
-                //this.SetDefaultPanoPage(PanoPages.Reserve);
-            }
-            catch (System.Exception ex)
-            {
-                MessageBox.Show(ex.Message);
-            }
+            this.qrScanner.Visibility = Visibility.Visible;
+            this.qrScanner.StartScanning();
         }
 
-        private void button3_Click(object sender, RoutedEventArgs e)
+        private void toggleSwitch1_Unchecked(object sender, RoutedEventArgs e)
         {
-            UserSettings userSettings = new UserSettings();
-            userSettings.IsWaiting = true;
-            userSettings.UserKey = "ABC";
-            userSettings.RestaurantName = "BuffaloWildWings";
-            userSettings.GuestName = "Jimbo";
-            userSettings.NumberOfGuests = 3;
-            userSettings.HostUri = UserURLs.HostUri;
-            userSettings.RegistrationUri = UserURLs.RegistrationUri;
-            userSettings.RetrievalUri = UserURLs.RetrievalUri;
-            userSettings.StartTimeToWait = 40;
-            userSettings.LastTimeToWait = 20;
-            userSettings.TimeStarted = DateTime.Now;
-            userSettings.TimeLastChecked = DateTime.Now;
-            userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
-            userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
-            //userSettings.RestaurantImagePath = new Uri("http://wac.450f.edgecastcdn.net/80450F/103gbfrocks.com/files/2011/11/Buffalo-Wild-Wings-wings.jpg", UriKind.Absolute);
-            userSettings.RestaurantImageName = "Image2.jpg";
-
-            InternalStorage.SaveToIsolatedStorage("UserSettings", userSettings);
-            InternalStorage.CommitToIsolatedStorage();
+            this.qrScanner.StopScanning();
+            this.qrScanner.Visibility = Visibility.Collapsed;
         }
     }
 }

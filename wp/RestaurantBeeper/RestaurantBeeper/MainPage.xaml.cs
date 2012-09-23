@@ -1,4 +1,5 @@
-﻿using System;
+﻿#define DEBUG_AGENT
+using System;
 using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
@@ -10,15 +11,14 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.ComponentModel;
 using JeffWilcox.Controls;
+using Microsoft.Phone.Scheduler;
 
 namespace RestaurantBeeper
 {
     public partial class MainPage : PhoneApplicationPage
     {
-        private bool firstLoad;
-        private bool objectsHidden;
-        private bool skipToWaitingPage;
-        private enum PanoPages { Reserve = 0, Wait, Action, Offers, Info, Help}
+        private enum PanoPages { Reserve = 0, Wait, Action, Offers, Info, Help }
+        public UserSettings userSettings { get; set; }
 
         // Constructor
         public MainPage()
@@ -28,10 +28,125 @@ namespace RestaurantBeeper
             if (this.TryLoadSettings())
             {
                 this.InitWaitingPano();
-                SetDefaultPanoPage(PanoPages.Wait);
+                this.SetDefaultPanoPage(PanoPages.Wait);
             }
         }
 
+        public void InitWaitingPano()
+        {
+            try
+            {
+                this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                this.textBlockRestaurantName.Text = userSettings.RestaurantName;
+                this.testBlockGuestName.Text = userSettings.GuestName;
+                this.textBlockNumberOfGuests.Text = userSettings.NumberOfGuests.ToString();
+                this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
+                
+                // TODO: Get the real color via the service...
+                this.MainPano.Foreground = this.ConvertHexToBrush("#FFF5F500");
+
+                foreach (UIElement element in this.stackPanelWait.Children)
+                {
+                    if (element.Visibility == Visibility.Collapsed && element != this.textBlockNotWaiting)
+                    {
+                        this.ToggleVisibility(element);
+                    }
+                }
+
+                this.SetVisibility(this.textBlockNotWaiting, Visibility.Collapsed);
+                
+                if (userSettings.StartTimeToWait > 0 && userSettings.LastTimeToWait > 0)
+                {
+                    this.progressBarWaitTime.IsIndeterminate = false;
+                    this.progressBarWaitTime.Value = (((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100;
+                }
+
+                // TODO: Loading a background image into the pano causes the app to chug... Figure out why and how to fix it.
+                this.LoadImage();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again. " + ex.Message, "We goofed", MessageBoxButton.OK);
+            }
+        }
+        
+#region BackgroundAgent 
+
+        PeriodicTask periodicTask;
+
+        string periodicTaskName = "PeriodicAgent";
+        public bool agentsAreEnabled = true;
+
+        private void StartPeriodicAgent()
+        {
+            // Variable for tracking enabled status of background agents for this app.
+            agentsAreEnabled = true;
+
+            // Obtain a reference to the period task, if one exists
+            periodicTask = ScheduledActionService.Find(periodicTaskName) as PeriodicTask;
+
+            // If the task already exists and background agents are enabled for the
+            // application, you must remove the task and then add it again to update 
+            // the schedule
+            if (periodicTask != null)
+            {
+                RemoveAgent(periodicTaskName);
+            }
+
+            periodicTask = new PeriodicTask(periodicTaskName);
+
+            // The description is required for periodic agents. This is the string that the user
+            // will see in the background services Settings page on the device.
+            periodicTask.Description = "This demonstrates a periodic task.";
+
+            // Place the call to Add in a try block in case the user has disabled agents.
+            try
+            {
+                ScheduledActionService.Add(periodicTask);
+                //PeriodicStackPanel.DataContext = periodicTask;
+
+                // If debugging is enabled, use LaunchForTest to launch the agent in one minute.
+#if(DEBUG_AGENT)
+    ScheduledActionService.LaunchForTest(periodicTaskName, TimeSpan.FromSeconds(60));
+#endif
+            }
+            catch (InvalidOperationException exception)
+            {
+                if (exception.Message.Contains("BNS Error: The action is disabled"))
+                {
+                    MessageBox.Show("Background agents for this application have been disabled by the user.");
+                    agentsAreEnabled = false;
+                    //PeriodicCheckBox.IsChecked = false;
+                }
+
+                if (exception.Message.Contains("BNS Error: The maximum number of ScheduledActions of this type have already been added."))
+                {
+                    // No user action required. The system prompts the user when the hard limit of periodic tasks has been reached.
+
+                }
+                //PeriodicCheckBox.IsChecked = false;
+            }
+            catch (SchedulerServiceException)
+            {
+                // No user action required.
+                //PeriodicCheckBox.IsChecked = false;
+            }
+        }
+
+        private void RemoveAgent(string name)
+        {
+            try
+            {
+                ScheduledActionService.Remove(name);
+            }
+            catch (Exception)
+            {
+            }
+        }
+
+#endregion
+
+#region Helpers
         private bool TryLoadSettings()
         {
             try
@@ -45,61 +160,43 @@ namespace RestaurantBeeper
             }
         }
 
+        private void ToggleVisibility(UIElement obj)
+        {
+            if (obj.Visibility == Visibility.Collapsed)
+            {
+                obj.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                obj.Visibility = Visibility.Collapsed;
+            }
+        }
+
+        private void SetVisibility(UIElement element, Visibility visibility)
+        {
+            element.Visibility = visibility;
+        }
+
         private void SetDefaultPanoPage(PanoPages page)
         {
             this.MainPano.DefaultItem = this.MainPano.Items[(int)page];
         }
 
-        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        private void SetPanoBackground(ImageBrush imageBrush)
         {
-            base.OnNavigatedTo(e);
+            this.MainPano.Background = imageBrush;
+        }
 
-            string result = "";
-
-            // Check to see if the page is navigated to from another page (e.g. the manual code entry page)
-            if (NavigationContext.QueryString.TryGetValue("ManualCode", out result))
+        private void ClearBackStack()
+        {
+            // While there are pages on the backstack, clear them out.
+            while (NavigationService.CanGoBack)
             {
-                DataRetriever.CodeRetrieved(result);
-
-                // Clear out the backstack
-                this.ClearBackStack();
+                NavigationService.RemoveBackEntry();
             }
         }
 
-        // WAITING PAGE LOGIC
-        private bool failed;
-        public UserSettings userSettings { get; set; }
-        private ImageBrush imageBrush;
-
-        public void InitWaitingPano()
-        {
-            try
-            {
-                this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
-                this.textBlockRestaurantName.Text = userSettings.RestaurantName;
-                this.testBlockGuestName.Text = userSettings.GuestName;
-                this.textBlockNumberOfGuests.Text = userSettings.NumberOfGuests.ToString();
-                this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
-
-                if (userSettings.StartTimeToWait > 0 && userSettings.LastTimeToWait > 0)
-                {
-                    this.progressBarWaitTime.IsIndeterminate = false;
-                    this.progressBarWaitTime.Value = (((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100;
-                }
-
-                // TODO: Loading a background image into the pano causes the app to chug... Figure out why and how to fix it.
-                LoadImage();
-
-                failed = false;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again. " + ex.Message, "We goofed", MessageBoxButton.OK);
-                failed = true;
-            }
-        }
-
-        private void LoadImage ()
+        private void LoadImage()
         {
             // Try to load the image from internal storage
             BitmapImage bitmapImage = null;
@@ -110,9 +207,10 @@ namespace RestaurantBeeper
 
                 if (bitmapImage != null)
                 {
-                    this.imageBrush = new ImageBrush();
-                    this.imageBrush.ImageSource = bitmapImage;
-                    SetPanoBackground();
+                    ImageBrush imageBrush = new ImageBrush();
+                    imageBrush = new ImageBrush();
+                    imageBrush.ImageSource = bitmapImage;
+                    this.SetPanoBackground(imageBrush);
                 }
                 else
                 {
@@ -141,24 +239,58 @@ namespace RestaurantBeeper
         {
             if (InternalStorage.SaveImage(this.userSettings.RestaurantImageName, imageContents))
             {
+                ImageBrush imageBrush = new ImageBrush();
                 BitmapImage bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
-                this.imageBrush = new ImageBrush();
-                this.imageBrush.ImageSource = bitmapImage;
-                SetPanoBackground();
-            }            
+                imageBrush = new ImageBrush();
+                imageBrush.ImageSource = bitmapImage;
+                this.SetPanoBackground(imageBrush);
+            }
         }
 
-        private void SetPanoBackground ()
+        private Brush ConvertHexToBrush(string hexValue)
         {
-            this.MainPano.Background = this.imageBrush;
-        }
+            byte alpha;
+            byte pos = 0;
 
-        private void ClearBackStack()
-        {
-            // While there are pages on the backstack, clear them out.
-            while (NavigationService.CanGoBack)
+            string hex = hexValue.ToString().Replace("#", "");
+
+            if (hex.Length == 8)
             {
-                NavigationService.RemoveBackEntry();
+                alpha = System.Convert.ToByte(hex.Substring(pos, 2), 16);
+                pos = 2;
+            }
+            else
+            {
+                alpha = System.Convert.ToByte("ff", 16);
+            }
+
+            byte red = System.Convert.ToByte(hex.Substring(pos, 2), 16);
+
+            pos += 2;
+            byte green = System.Convert.ToByte(hex.Substring(pos, 2), 16);
+
+            pos += 2;
+            byte blue = System.Convert.ToByte(hex.Substring(pos, 2), 16);
+
+            return new SolidColorBrush(Color.FromArgb(alpha, red, green, blue));
+        }
+
+#endregion
+
+#region Events
+        protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
+        {
+            base.OnNavigatedTo(e);
+
+            string result = "";
+
+            // Check to see if the page is navigated to from another page (e.g. the manual code entry page)
+            if (NavigationContext.QueryString.TryGetValue("ManualCode", out result))
+            {
+                DataRetriever.CodeRetrieved(result);
+
+                // Clear out the backstack
+                this.ClearBackStack();
             }
         }
 
@@ -166,5 +298,43 @@ namespace RestaurantBeeper
         {
             NavigationService.Navigate(new Uri("/ScanPage.xaml", UriKind.Relative));
         }
+
+        private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
+        {
+
+            UserSettings userSettings = new UserSettings();
+            userSettings.IsWaiting = true;
+            userSettings.UserKey = "ABC";
+            userSettings.RestaurantName = "BuffaloWildWings";
+            userSettings.GuestName = "Jimbo";
+            userSettings.NumberOfGuests = 3;
+            userSettings.HostUri = UserURLs.HostUri;
+            userSettings.RegistrationUri = UserURLs.RegistrationUri;
+            userSettings.RetrievalUri = UserURLs.RetrievalUri;
+            userSettings.StartTimeToWait = 40;
+            userSettings.LastTimeToWait = 20;
+            userSettings.TimeStarted = DateTime.Now;
+            userSettings.TimeLastChecked = DateTime.Now;
+            userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
+            userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
+            //userSettings.RestaurantImagePath = new Uri("http://wac.450f.edgecastcdn.net/80450F/103gbfrocks.com/files/2011/11/Buffalo-Wild-Wings-wings.jpg", UriKind.Absolute);
+            userSettings.RestaurantImageName = "Image2.jpg";
+
+            InternalStorage.SaveToIsolatedStorage("UserSettings", userSettings);
+            InternalStorage.CommitToIsolatedStorage();
+            this.InitWaitingPano();
+        }
+
+        private void ApplicationBarMenuItem_Click_1(object sender, EventArgs e)
+        {
+            this.StartPeriodicAgent();
+        }
+
+        private void ApplicationBarIconButton_Click_1(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/SettingsPage.xaml", UriKind.Relative));
+        }
+#endregion
+
     }
 }
