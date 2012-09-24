@@ -1,17 +1,12 @@
 ﻿#define DEBUG_AGENT
 using System;
-using System.IO;
-using System.Net;
-using System.Runtime.Serialization.Json;
-using System.Text;
 using System.Windows;
-using Microsoft.Phone.Controls;
-using System.IO.IsolatedStorage;
-using System.Windows.Media.Imaging;
 using System.Windows.Media;
-using System.ComponentModel;
-using JeffWilcox.Controls;
+using System.Windows.Media.Imaging;
+using Microsoft.Phone.Controls;
 using Microsoft.Phone.Scheduler;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace RestaurantBeeper
 {
@@ -20,57 +15,108 @@ namespace RestaurantBeeper
         private enum PanoPages { Reserve = 0, Wait, Action, Offers, Info, Help }
         public UserSettings userSettings { get; set; }
 
+        private Timer updateTimer;
+        private bool ImageLoaded;
+
         // Constructor
         public MainPage()
         {
             InitializeComponent();
+            this.ImageLoaded = false;
 
             if (this.TryLoadSettings())
             {
-                this.InitWaitingPano();
-                this.SetDefaultPanoPage(PanoPages.Wait);
+                if (this.userSettings.RetrievalUri != null)
+                {
+                    this.InitWaitingPano();
+
+                    DataRetriever.DataRetrievedSuccessfully = new DataRetriever.CallBackOnRetrieval(this.UpdateUserSettings);
+                    updateTimer = new Timer(new TimerCallback(this.UpdateReservation), null, 0, 1000);
+
+                    this.SetDefaultPanoPage(PanoPages.Wait);
+                }
+                else
+                {
+                    MessageBox.Show("There was a problem with the information stored from last time. Please try again or ask for assistance.", "Huh...", MessageBoxButton.OK);
+                    InternalStorage.RemoveFromIsolatedStorage("UserSettings");
+                }
             }
         }
 
-        public void InitWaitingPano()
+        private void UpdateReservation(Object obj)
         {
-            try
+            // Step 1 - Ping Web service for updated info
+            DataRetriever.RetrieveUser();
+            // Step 2 - Copy the start time to wait from the last update to the newest one -- Handled in UpdateUserSettings
+            // Step 3 - Replace the old info with the new info -- Handled in UpdateUserSettings
+            // Step 4 - Save 
+            // Step 5 - Update UI
+            this.userSettings.LastTimeToWait--;
+            this.InitWaitingPano();
+
+        }
+
+        private void UpdateUserSettings(UserSettings updatedUserSettings)
+        {
+            updatedUserSettings.StartTimeToWait = this.userSettings.StartTimeToWait;
+            this.userSettings = updatedUserSettings;
+            InternalStorage.SaveToIsolatedStorage("UserSettings", this.userSettings);
+
+            if (this.userSettings.LastTimeToWait > 0)
             {
-                this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
-                this.textBlockRestaurantName.Text = userSettings.RestaurantName;
-                this.testBlockGuestName.Text = userSettings.GuestName;
-                this.textBlockNumberOfGuests.Text = userSettings.NumberOfGuests.ToString();
-                this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
-                
-                // TODO: Get the real color via the service...
-                this.MainPano.Foreground = this.ConvertHexToBrush("#FFF5F500");
-
-                foreach (UIElement element in this.stackPanelWait.Children)
-                {
-                    if (element.Visibility == Visibility.Collapsed && element != this.textBlockNotWaiting)
-                    {
-                        this.ToggleVisibility(element);
-                    }
-                }
-
-                this.SetVisibility(this.textBlockNotWaiting, Visibility.Collapsed);
-                
-                if (userSettings.StartTimeToWait > 0 && userSettings.LastTimeToWait > 0)
-                {
-                    this.progressBarWaitTime.IsIndeterminate = false;
-                    this.progressBarWaitTime.Value = (((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100;
-                }
-
-                // TODO: Loading a background image into the pano causes the app to chug... Figure out why and how to fix it.
-                this.LoadImage();
+                this.InitWaitingPano();
             }
-            catch (Exception ex)
+            else
             {
-                MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again. " + ex.Message, "We goofed", MessageBoxButton.OK);
+                // TODO: Change UI to notify the user that time has elapsed, clear out settings?
+                // Kill timer?
             }
         }
-        
-#region BackgroundAgent 
+
+        private void InitWaitingPano()
+        {
+            this.Dispatcher.BeginInvoke(() =>
+            {
+                try
+                {
+                    this.textBlockRestaurantName.Text = userSettings.RestaurantName;
+                    this.testBlockGuestName.Text = userSettings.GuestName;
+                    this.textBlockNumberOfGuests.Text = userSettings.NumberOfGuests.ToString();
+                    this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
+
+                    // TODO: Get the real color via the service...
+                    this.MainPano.Foreground = this.ConvertHexToBrush("#FFF5F500");
+
+                    foreach (UIElement element in this.stackPanelWait.Children)
+                    {
+                        if (element.Visibility == Visibility.Collapsed && element != this.textBlockNotWaiting)
+                        {
+                            this.ToggleVisibility(element);
+                        }
+                    }
+
+                    this.SetVisibility(this.textBlockNotWaiting, Visibility.Collapsed);
+
+                    if (userSettings.StartTimeToWait > 0 && userSettings.LastTimeToWait > 0)
+                    {
+                        this.progressBarWaitTime.IsIndeterminate = false;
+                        this.progressBarWaitTime.Value = 100 - ((((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100);
+                    }
+
+                    if (!this.ImageLoaded)
+                    {
+                        this.LoadImage();
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("There was a problem loading your data... We're really sorry. Please try again. " + ex.Message, "We goofed", MessageBoxButton.OK);
+                }
+            });
+        }
+
+        #region BackgroundAgent
 
         PeriodicTask periodicTask;
 
@@ -79,57 +125,78 @@ namespace RestaurantBeeper
 
         private void StartPeriodicAgent()
         {
-            // Variable for tracking enabled status of background agents for this app.
-            agentsAreEnabled = true;
-
-            // Obtain a reference to the period task, if one exists
-            periodicTask = ScheduledActionService.Find(periodicTaskName) as PeriodicTask;
-
-            // If the task already exists and background agents are enabled for the
-            // application, you must remove the task and then add it again to update 
-            // the schedule
-            if (periodicTask != null)
-            {
-                RemoveAgent(periodicTaskName);
-            }
-
-            periodicTask = new PeriodicTask(periodicTaskName);
-
-            // The description is required for periodic agents. This is the string that the user
-            // will see in the background services Settings page on the device.
-            periodicTask.Description = "This demonstrates a periodic task.";
-
-            // Place the call to Add in a try block in case the user has disabled agents.
             try
             {
-                ScheduledActionService.Add(periodicTask);
-                //PeriodicStackPanel.DataContext = periodicTask;
+                if (InternalStorage.LoadFromIsolatedStorage<bool>("BackgroundAgentEnabled"))
+                {
+                    // Variable for tracking enabled status of background agents for this app.
+                    agentsAreEnabled = true;
 
-                // If debugging is enabled, use LaunchForTest to launch the agent in one minute.
+                    // Obtain a reference to the period task, if one exists
+                    periodicTask = ScheduledActionService.Find(periodicTaskName) as PeriodicTask;
+
+                    // If the task already exists and background agents are enabled for the
+                    // application, you must remove the task and then add it again to update 
+                    // the schedule
+                    if (periodicTask != null)
+                    {
+                        RemoveAgent(periodicTaskName);
+                    }
+
+                    periodicTask = new PeriodicTask(periodicTaskName);
+
+                    // The description is required for periodic agents. This is the string that the user
+                    // will see in the background services Settings page on the device.
+                    periodicTask.Description = "This background service is used to check on reservation statuses when in use. It will be disabled when no reservations are active.";
+
+                    // Place the call to Add in a try block in case the user has disabled agents.
+                    try
+                    {
+                        ScheduledActionService.Add(periodicTask);
+                        //PeriodicStackPanel.DataContext = periodicTask;
+
+                        // If debugging is enabled, use LaunchForTest to launch the agent in one minute.
 #if(DEBUG_AGENT)
-    ScheduledActionService.LaunchForTest(periodicTaskName, TimeSpan.FromSeconds(60));
+                        ScheduledActionService.LaunchForTest(periodicTaskName, TimeSpan.FromSeconds(60));
 #endif
-            }
-            catch (InvalidOperationException exception)
-            {
-                if (exception.Message.Contains("BNS Error: The action is disabled"))
-                {
-                    MessageBox.Show("Background agents for this application have been disabled by the user.");
-                    agentsAreEnabled = false;
-                    //PeriodicCheckBox.IsChecked = false;
-                }
+                    }
+                    catch (InvalidOperationException exception)
+                    {
+                        if (exception.Message.Contains("BNS Error: The action is disabled"))
+                        {
+                            MessageBox.Show("Background agents for this application have been disabled by the user.");
+                            agentsAreEnabled = false;
+                            //PeriodicCheckBox.IsChecked = false;
+                        }
 
-                if (exception.Message.Contains("BNS Error: The maximum number of ScheduledActions of this type have already been added."))
-                {
-                    // No user action required. The system prompts the user when the hard limit of periodic tasks has been reached.
+                        if (exception.Message.Contains("BNS Error: The maximum number of ScheduledActions of this type have already been added."))
+                        {
+                            // No user action required. The system prompts the user when the hard limit of periodic tasks has been reached.
 
+                        }
+                        //PeriodicCheckBox.IsChecked = false;
+                    }
+                    catch (SchedulerServiceException)
+                    {
+                        // No user action required.
+                        //PeriodicCheckBox.IsChecked = false;
+                    }
                 }
-                //PeriodicCheckBox.IsChecked = false;
             }
-            catch (SchedulerServiceException)
+            catch (KeyNotFoundException)
             {
-                // No user action required.
-                //PeriodicCheckBox.IsChecked = false;
+                MessageBoxResult mbResult = MessageBox.Show(@"Would you mind if we enabled background services for you? Background services allow us to keep track of any reservations while the app isn't running. Don't worry, if you don't have any active " +
+                    "reservations, we'll disable this automatically for you. You can always disable this at any time in settings.", "Do you mind?", MessageBoxButton.OKCancel);
+
+                if (mbResult == MessageBoxResult.OK)
+                {
+                    InternalStorage.SaveToIsolatedStorage("BackgroundAgentEnabled", true);
+                    this.StartPeriodicAgent();
+                }
+                else
+                {
+                    InternalStorage.SaveToIsolatedStorage("BackgroundAgentEnabled", false);
+                }
             }
         }
 
@@ -144,15 +211,15 @@ namespace RestaurantBeeper
             }
         }
 
-#endregion
+        #endregion
 
-#region Helpers
+        #region Helpers
         private bool TryLoadSettings()
         {
             try
             {
-                UserSettings userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
-                return userSettings.IsWaiting;
+                this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                return this.userSettings.IsWaiting;
             }
             catch (Exception)
             {
@@ -185,6 +252,7 @@ namespace RestaurantBeeper
         private void SetPanoBackground(ImageBrush imageBrush)
         {
             this.MainPano.Background = imageBrush;
+            this.ImageLoaded = true;
         }
 
         private void ClearBackStack()
@@ -275,9 +343,9 @@ namespace RestaurantBeeper
             return new SolidColorBrush(Color.FromArgb(alpha, red, green, blue));
         }
 
-#endregion
+        #endregion
 
-#region Events
+        #region Events
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -299,6 +367,12 @@ namespace RestaurantBeeper
             NavigationService.Navigate(new Uri("/ScanPage.xaml", UriKind.Relative));
         }
 
+        private void ApplicationBarIconButton_Click_1(object sender, EventArgs e)
+        {
+            NavigationService.Navigate(new Uri("/SettingsPage.xaml", UriKind.Relative));
+        }
+
+        // Test code
         private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
         {
 
@@ -312,7 +386,7 @@ namespace RestaurantBeeper
             userSettings.RegistrationUri = UserURLs.RegistrationUri;
             userSettings.RetrievalUri = UserURLs.RetrievalUri;
             userSettings.StartTimeToWait = 40;
-            userSettings.LastTimeToWait = 20;
+            userSettings.LastTimeToWait = 40;
             userSettings.TimeStarted = DateTime.Now;
             userSettings.TimeLastChecked = DateTime.Now;
             userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
@@ -330,11 +404,8 @@ namespace RestaurantBeeper
             this.StartPeriodicAgent();
         }
 
-        private void ApplicationBarIconButton_Click_1(object sender, EventArgs e)
-        {
-            NavigationService.Navigate(new Uri("/SettingsPage.xaml", UriKind.Relative));
-        }
-#endregion
+        // End Test code
+        #endregion
 
     }
 }

@@ -18,21 +18,21 @@
     <!--LayoutRoot is the root grid where all page content is placed-->
     <Grid x:Name="LayoutRoot" Background="Transparent">
         <!--Pivot Control-->
-        <controls:Pivot Name="ScanPivot"  Title="RestaurantBeeper">
+        <controls:Pivot Name="ScanPivot"  Title="RestaurantBeeper" SelectionChanged="ScanPivot_SelectionChanged">
             <!--Pivot item one-->
-            <controls:PivotItem Header="Scan">
+            <controls:PivotItem Name="ScanPivotItem" Header="Scan">
                 <Grid>
                     <TextBlock Height="30" HorizontalAlignment="Left" Margin="8,549,0,0" Name="textBlockResult" Text="No result." VerticalAlignment="Top" Width="440" />
                     <HyperlinkButton Content="Having trouble scanning? Tap here." Height="30" HorizontalAlignment="Left" Margin="40,578,0,0" Name="hyperlinkButton1" VerticalAlignment="Top" Width="373" Click="hyperlinkButton1_Click" />
                     <Button Content="Waiting for a code" Height="72" HorizontalAlignment="Left" Margin="56,482,0,0" Name="buttonWaiting" VerticalAlignment="Top" Width="341" IsEnabled="False" Click="buttonWaiting_Click" />
                     <jwqr:QRCodeScanner Name="qrScanner" ScanComplete="QRCodeScanner_ScanComplete" Error="QRCodeScanner_Error" Margin="23,90,27,117" Height="400" Width="406" />
-                    <toolkit:ToggleSwitch Header="Active QR Code Scanning" Height="111" HorizontalAlignment="Left" Name="toggleSwitch1" VerticalAlignment="Top" Width="456" IsChecked="true" Checked="toggleSwitch1_Checked" Unchecked="toggleSwitch1_Unchecked" Margin="-2,0,0,0" />
+                    <toolkit:ToggleSwitch Header="Active QR Code Scanning" Height="111" HorizontalAlignment="Left" Name="toggleSwitch1" VerticalAlignment="Top" Width="456" IsChecked="true"  Checked="toggleSwitch1_Checked" Unchecked="toggleSwitch1_Unchecked" Margin="-2,0,0,0" />
 
                 </Grid>
             </controls:PivotItem>
 
             <!--Pivot item two-->
-            <controls:PivotItem Header="Manual">
+            <controls:PivotItem Name="ManualPivotItem" Header="Manual" >
                 <Grid>
                     <TextBlock TextWrapping="Wrap" Height="63" HorizontalAlignment="Left" Margin="8,6,0,0" Name="textBlock1" Text="We're sorry we can't scan a QR code right now. Please enter the manual code below." VerticalAlignment="Top" Width="440" />
                     <TextBox Height="72" HorizontalAlignment="Left" Margin="8,73,0,0" Name="textBox1" Text="" VerticalAlignment="Top" Width="440" />

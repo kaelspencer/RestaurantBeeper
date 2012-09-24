@@ -86,9 +86,7 @@ namespace RestaurantBeeper
                 UriBuilder uriBuilder = new UriBuilder(UserURLs.HostUri);
                 uriBuilder.Path += registrationData.poll_url;
                 UserURLs.RetrievalUri = uriBuilder.Uri;
-
-                MessageBox.Show(UserURLs.RetrievalUri.ToString());
-
+                
                 if (DataRetriever.UserRegisteredSuccessfully != null)
                 {
                     DataRetriever.UserRegisteredSuccessfully();
@@ -97,8 +95,6 @@ namespace RestaurantBeeper
             catch (System.Exception ex)
             {
                 // TODO: Properly handle errors. e.g. 404, not found, etc.
-                MessageBox.Show(ex.Message);
-
                 if (DataRetriever.UserRegisteredFailure != null)
                 {
                     DataRetriever.UserRegisteredFailure();
@@ -129,7 +125,6 @@ namespace RestaurantBeeper
                     userSettings.TimeStarted = DateTime.Now;
                     userSettings.TimeLastChecked = DateTime.Now;
                     userSettings.TimeExpected = DateTime.Now.AddMinutes(retrievedHeader.data.time_to_wait);
-                    MessageBox.Show(String.Format("Restaurant: {0}, Guests: {1}, Name: {2}, Time To Wait: {3}, Key: {4}", retrievedHeader.data.restaurant, retrievedHeader.data.guests, retrievedHeader.data.name, retrievedHeader.data.time_to_wait, retrievedHeader.data.key));
 
                     if (DataRetriever.DataRetrievedSuccessfully != null)
                     {
@@ -142,10 +137,10 @@ namespace RestaurantBeeper
                     {
                         case 1:
                             // TODO: What's this error code definition?
-                            MessageBox.Show("When attempting to contact the server, we received an error code of '1'. Please try again or ask for assistance.", "Hmm...", MessageBoxButton.OK);
+                            //MessageBox.Show("When attempting to contact the server, we received an error code of '1'. Please try again or ask for assistance.", "Hmm...", MessageBoxButton.OK);
                             break;
                         default:
-                            MessageBox.Show(String.Format("When attempting to contact the server, we received an unknown error code of '{0}'. Please try again or ask for assistance.", retrievedHeader.code), "Whoops...", MessageBoxButton.OK);
+                            //MessageBox.Show(String.Format("When attempting to contact the server, we received an unknown error code of '{0}'. Please try again or ask for assistance.", retrievedHeader.code), "Whoops...", MessageBoxButton.OK);
                             break;
                     }
 
@@ -158,7 +153,6 @@ namespace RestaurantBeeper
             catch (System.Exception ex)
             {
                 // TODO: Properly handle errors. e.g. 404, not found, etc.
-                MessageBox.Show(ex.Message);
 
                 if (DataRetriever.DataRetrievedFailure != null)
                 {

@@ -1,14 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using Microsoft.Phone.Controls;
 
 namespace RestaurantBeeper
@@ -50,7 +41,7 @@ namespace RestaurantBeeper
 
         private void QRCodeScanner_Error(object sender, JeffWilcox.Controls.ScanFailureEventArgs e)
         {
-            MessageBox.Show("There was a problem accessing the camera. Please try again. If that does not work, please close and re-open the app.", "Hmm...", MessageBoxButton.OK);
+            MessageBox.Show("There was a problem accessing the camera. Please try again. If that does not work, please close and re-open the app. " + e.Exception.Message, "Hmm...", MessageBoxButton.OK);
         }
 
         private void hyperlinkButton1_Click(object sender, RoutedEventArgs e)
@@ -86,6 +77,20 @@ namespace RestaurantBeeper
         {
             this.qrScanner.StopScanning();
             this.qrScanner.Visibility = Visibility.Collapsed;
+        }
+
+        private void ScanPivot_SelectionChanged(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // Sometimes switching the pivot while the camera is being used causes issues (it also slows down the system).
+            // If scanning, disable the QRScanner control while it's off the screen. When it comes back into view, re-enable it.
+            if (this.qrScanner.IsScanning && e.AddedItems.Count > 0 && e.AddedItems[0] == this.ManualPivotItem)
+            {
+                this.qrScanner.StopScanning();
+            }
+            else if(this.toggleSwitch1.IsChecked.Value)
+            {
+                this.qrScanner.StartScanning();
+            }
         }
     }
 }

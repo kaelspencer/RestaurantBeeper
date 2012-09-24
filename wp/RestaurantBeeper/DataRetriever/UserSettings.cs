@@ -29,7 +29,7 @@ namespace RestaurantBeeper
             return (T)InternalStorage.isolatedStorageSettings[key];
         }
 
-        public static void EmptyIsolatedStorage()
+        private static void EmptyIsolatedStorage()
         {
             InternalStorage.isolatedStorageSettings.Clear();
 
@@ -37,6 +37,11 @@ namespace RestaurantBeeper
             {
                 store.Remove();
             }
+        }
+
+        public static void RemoveFromIsolatedStorage(string key)
+        {
+            InternalStorage.isolatedStorageSettings.Remove(key);
         }
 
         public static void CommitToIsolatedStorage()
@@ -97,7 +102,7 @@ namespace RestaurantBeeper
                 }
                 else
                 {
-                    throw new FileNotFoundException("The image file does not exist yet.");
+                    throw new FileNotFoundException("The image file does not exist.");
                 }
             }
         }

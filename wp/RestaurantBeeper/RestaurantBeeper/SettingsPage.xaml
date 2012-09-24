@@ -23,7 +23,7 @@
             <controls:PivotItem Header="Settings">
                 <Grid>
                     <StackPanel Height="606" HorizontalAlignment="Left" Name="stackPanel1" VerticalAlignment="Top" Width="456">
-                        <toolkit:ToggleSwitch Header="Background Services" Height="111" HorizontalAlignment="Left" Margin="0,0,0,0" Name="toggleSwitch1" VerticalAlignment="Top" Width="456" IsChecked="{Binding IsEnabled}"/>
+                        <toolkit:ToggleSwitch Header="Background Services" Height="111" HorizontalAlignment="Left" Margin="0,0,0,0" Name="toggleSwitch1" VerticalAlignment="Top" Width="456" IsChecked="{Binding IsEnabled}" Checked="toggleSwitch1_Checked" Unchecked="toggleSwitch1_Unchecked" />
                     </StackPanel>
                 </Grid>
             </controls:PivotItem>
