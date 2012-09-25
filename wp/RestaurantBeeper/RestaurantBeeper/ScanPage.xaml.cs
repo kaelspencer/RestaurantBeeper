@@ -59,7 +59,7 @@ namespace RestaurantBeeper
 
         private void buttonWaiting_Click(object sender, RoutedEventArgs e)
         {
-            DataRetriever.RegisterUser();
+            NavigationService.Navigate(new Uri("/MainPage.xaml?ReadyToRegister=true", UriKind.Relative));
         }
 
         private void PhoneApplicationPage_Unloaded(object sender, RoutedEventArgs e)

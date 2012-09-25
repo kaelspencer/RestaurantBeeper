@@ -20,14 +20,15 @@ namespace RestaurantBeeper
         public static CallBackOnRegistration UserRegisteredSuccessfully { get; set; }
 
         /// <summary>
+        /// The method to call after the user is successfully registered
+        /// </summary>
+        public static CallBackOnRegistration UserRegisteredFailure { get; set; }
+
+        /// <summary>
         /// The method to call after the data is successfully retrieved
         /// </summary>
         public static CallBackOnRetrieval DataRetrievedSuccessfully { get; set; }
 
-        /// <summary>
-        /// The method to call after the user is successfully registered
-        /// </summary>
-        public static CallBackOnRegistration UserRegisteredFailure { get; set; }
 
         /// <summary>
         /// The method to call after the data is successfully retrieved
@@ -86,6 +87,12 @@ namespace RestaurantBeeper
                 UriBuilder uriBuilder = new UriBuilder(UserURLs.HostUri);
                 uriBuilder.Path += registrationData.poll_url;
                 UserURLs.RetrievalUri = uriBuilder.Uri;
+                uriBuilder.Path = uriBuilder.Path.Replace(registrationData.poll_url, registrationData.cancel_url);
+                UserURLs.CancelUri = uriBuilder.Uri;
+                uriBuilder.Path = uriBuilder.Path.Replace(registrationData.cancel_url, registrationData.delay_url);
+                UserURLs.DelayUri = uriBuilder.Uri;
+                uriBuilder.Path = uriBuilder.Path.Replace(registrationData.delay_url, registrationData.restaurant_url);
+                UserURLs.RestaurantUri = uriBuilder.Uri;
                 
                 if (DataRetriever.UserRegisteredSuccessfully != null)
                 {
@@ -179,6 +186,7 @@ namespace RestaurantBeeper
 
         public static void CodeRetrieved(string result)
         {
+            result = result.Replace("descartes:8000", "restaurant.kaelspencer.com");
             UserURLs.RegistrationUri = new Uri(result);
 
             UriBuilder uriBuilder = new UriBuilder(result);

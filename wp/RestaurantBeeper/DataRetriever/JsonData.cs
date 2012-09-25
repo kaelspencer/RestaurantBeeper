@@ -13,8 +13,9 @@ namespace RestaurantBeeper
 {
     public class RetrievedHeader
     {
-        public int code { get; set; }
+        public string status { get; set; }
         public string message { get; set; }
+        public int code { get; set; }
         public RetrievedData data { get; set; }
     }
 
@@ -25,20 +26,23 @@ namespace RestaurantBeeper
         public string name { get; set; }
         public string key { get; set; }
         public string restaurant { get; set; }
+        public bool registered { get; set; }
+        public bool push_enabled { get; set; }
     }
 
     public class RegistrationData
     {
+        public string cancel_url { get; set; }
+        public string delay_url { get; set; }
         public string poll_url { get; set; }
+        public string restaurant_url { get; set; }
     }
 
-    public static class UserURLs
+    public class RestaurantData
     {
-        /// <summary>
-        /// The URL to hit when registering the user. Use String.Format() to insert the provided key
-        /// </summary>
-        public static Uri HostUri { get; set; }
-        public static Uri RegistrationUri { get; set; }
-        public static Uri RetrievalUri { get; set; }
+        public string name { get; set; }
+        public string background_image_url { get; set; }
+        public string primary_color { get; set; }
+        public string secondary_color { get; set; }
     }
 }

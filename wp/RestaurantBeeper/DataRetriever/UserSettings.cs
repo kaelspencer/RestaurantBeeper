@@ -126,4 +126,34 @@ namespace RestaurantBeeper
         public Uri RestaurantImagePath { get; set; }
         public string RestaurantImageName { get; set; }
     }
+
+    public static class UserURLs
+    {
+        public static Uri HostUri { get; set; }
+        public static Uri RegistrationUri { get; set; }
+        public static Uri RetrievalUri { get; set; }
+        public static Uri CancelUri { get; set; }
+        public static Uri DelayUri { get; set; }
+        public static Uri RestaurantUri { get; set; }
+
+        public static void Save()
+        {
+            InternalStorage.SaveToIsolatedStorage("HostUri", UserURLs.HostUri);
+            InternalStorage.SaveToIsolatedStorage("RegistrationUri", UserURLs.RegistrationUri);
+            InternalStorage.SaveToIsolatedStorage("RetrievalUri", UserURLs.RetrievalUri);
+            InternalStorage.SaveToIsolatedStorage("CancelUri", UserURLs.CancelUri);
+            InternalStorage.SaveToIsolatedStorage("DelayUri", UserURLs.DelayUri);
+            InternalStorage.SaveToIsolatedStorage("RestaurantUri", UserURLs.RestaurantUri);
+        }
+
+        public static void Load()
+        {
+            UserURLs.HostUri = InternalStorage.LoadFromIsolatedStorage<Uri>("HostUri");
+            UserURLs.RegistrationUri = InternalStorage.LoadFromIsolatedStorage<Uri>("RegistrationUri");
+            UserURLs.RetrievalUri = InternalStorage.LoadFromIsolatedStorage<Uri>("RetrievalUri");
+            UserURLs.CancelUri = InternalStorage.LoadFromIsolatedStorage<Uri>("CancelUri");
+            UserURLs.DelayUri = InternalStorage.LoadFromIsolatedStorage<Uri>("DelayUri");
+            UserURLs.RestaurantUri = InternalStorage.LoadFromIsolatedStorage<Uri>("RestaurantUri");
+        }
+    }
 }

@@ -24,16 +24,17 @@ namespace RestaurantBeeper
             InitializeComponent();
             this.ImageLoaded = false;
 
+            DataRetriever.DataRetrievedFailure = new DataRetriever.CallBackOnRetrieval(this.UserRetrievalFailure);
+            DataRetriever.UserRegisteredSuccessfully = new DataRetriever.CallBackOnRegistration(this.UserRegistrationSuccessful);
+            DataRetriever.UserRegisteredFailure = new DataRetriever.CallBackOnRegistration(this.UserRegistrationFailure);
+
             if (this.TryLoadSettings())
             {
                 if (this.userSettings.RetrievalUri != null)
                 {
-                    this.InitWaitingPano();
-
                     DataRetriever.DataRetrievedSuccessfully = new DataRetriever.CallBackOnRetrieval(this.UpdateUserSettings);
-                    updateTimer = new Timer(new TimerCallback(this.UpdateReservation), null, 0, 1000);
-
-                    this.SetDefaultPanoPage(PanoPages.Wait);
+                    this.StartTimer();
+                    this.InitWaitingPano();
                 }
                 else
                 {
@@ -41,26 +42,61 @@ namespace RestaurantBeeper
                     InternalStorage.RemoveFromIsolatedStorage("UserSettings");
                 }
             }
+            else
+            {
+                DataRetriever.DataRetrievedSuccessfully = new DataRetriever.CallBackOnRetrieval(this.FirstUpdateUserSettings);
+            }
+        }
+
+        private void StartTimer(uint delay = 0)
+        {
+            updateTimer = new Timer(new TimerCallback(this.UpdateReservation), null, delay, 10000);
+            this.SetDefaultPanoPage(PanoPages.Wait);
+        }
+
+        private void UserRegistrationSuccessful()
+        {
+            DataRetriever.RetrieveUser();
+        }
+
+        private void UserRegistrationFailure()
+        {
+
         }
 
         private void UpdateReservation(Object obj)
         {
-            // Step 1 - Ping Web service for updated info
             DataRetriever.RetrieveUser();
-            // Step 2 - Copy the start time to wait from the last update to the newest one -- Handled in UpdateUserSettings
-            // Step 3 - Replace the old info with the new info -- Handled in UpdateUserSettings
-            // Step 4 - Save 
-            // Step 5 - Update UI
-            this.userSettings.LastTimeToWait--;
-            this.InitWaitingPano();
+        }
 
+        private int count = 0;
+        private void FirstUpdateUserSettings(UserSettings updatedUserSettings)
+        {
+            this.userSettings = updatedUserSettings;
+            InternalStorage.SaveToIsolatedStorage("UserSettings", this.userSettings);
+            UserURLs.Save();
+
+            if (this.userSettings.LastTimeToWait > 0)
+            {
+                this.InitWaitingPano();
+                this.StartTimer(10000);
+            }
+            else
+            {
+                // TODO: Change UI to notify the user that time has elapsed, clear out settings?
+                // Kill timer?
+            }
+
+            DataRetriever.DataRetrievedSuccessfully = new DataRetriever.CallBackOnRetrieval(this.UpdateUserSettings);
         }
 
         private void UpdateUserSettings(UserSettings updatedUserSettings)
         {
             updatedUserSettings.StartTimeToWait = this.userSettings.StartTimeToWait;
             this.userSettings = updatedUserSettings;
+            this.userSettings.LastTimeToWait -= count++;
             InternalStorage.SaveToIsolatedStorage("UserSettings", this.userSettings);
+            UserURLs.Save();
 
             if (this.userSettings.LastTimeToWait > 0)
             {
@@ -71,6 +107,11 @@ namespace RestaurantBeeper
                 // TODO: Change UI to notify the user that time has elapsed, clear out settings?
                 // Kill timer?
             }
+        }
+
+        private void UserRetrievalFailure(UserSettings userSettings)
+        {
+
         }
 
         private void InitWaitingPano()
@@ -103,7 +144,7 @@ namespace RestaurantBeeper
                         this.progressBarWaitTime.Value = 100 - ((((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100);
                     }
 
-                    if (!this.ImageLoaded)
+                    if (!this.ImageLoaded && this.userSettings.RestaurantImagePath != null)
                     {
                         this.LoadImage();
                     }
@@ -219,6 +260,7 @@ namespace RestaurantBeeper
             try
             {
                 this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                UserURLs.Load();
                 return this.userSettings.IsWaiting;
             }
             catch (Exception)
@@ -356,14 +398,23 @@ namespace RestaurantBeeper
             if (NavigationContext.QueryString.TryGetValue("ManualCode", out result))
             {
                 DataRetriever.CodeRetrieved(result);
-
-                // Clear out the backstack
-                this.ClearBackStack();
             }
+
+            if (NavigationContext.QueryString.TryGetValue("ReadyToRegister", out result))
+            {
+                if (bool.Parse(result))
+                {
+                    DataRetriever.RegisterUser();
+                }
+            }
+
+            // Clear out the backstack
+            this.ClearBackStack();
         }
 
         private void ApplicationBarIconButton_Click(object sender, EventArgs e)
         {
+            
             NavigationService.Navigate(new Uri("/ScanPage.xaml", UriKind.Relative));
         }
 
