@@ -14,7 +14,10 @@ MANAGERS = ADMINS
 
 # Presume that only the production server will run on hoth
 # This isn't the best longterm solution.
-PRODUCTION = ("hoth" in platform.node())
+
+# Debug on hoth for now for debugging purposes.
+#PRODUCTION = ("hoth" in platform.node())
+PRODUCTION = False
 
 if PRODUCTION:
     print "Production: true"
