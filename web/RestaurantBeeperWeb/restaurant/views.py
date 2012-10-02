@@ -83,7 +83,7 @@ def reservation_new(request):
     return render_to_response('restaurant/reservation.new.html', context, context_instance=RequestContext(request))
 
 def reservation_view(request, slug):
-    context = {'qrcode_url': qrcode('http://descartes:8000/register/' + slug)}
+    context = {'qrcode_url': qrcode('http://restaurant.kaelspencer.com/register/' + slug)}
 
     return render_to_response('restaurant/reservation.view.html', context)
 
