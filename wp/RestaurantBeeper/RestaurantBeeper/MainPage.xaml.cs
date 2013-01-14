@@ -77,6 +77,8 @@ namespace RestaurantBeeper
 
         private void FirstUpdateUserSettings(UserSettings updatedUserSettings)
         {
+            // TODO: Do more work here around showing/hiding the WaitControl. It can become stuck in a visible state too easily.
+            this.waitControl.Visibility = Visibility.Visible;
             this.userSettings = updatedUserSettings;
             InternalStorage.SaveToIsolatedStorage("UserSettings", this.userSettings);
             UserURLs.Save();
@@ -337,6 +339,11 @@ namespace RestaurantBeeper
                     imageBrush = new ImageBrush();
                     imageBrush.ImageSource = bitmapImage;
                     this.SetPanoBackground(imageBrush);
+
+                    if (this.waitControl.Visibility == System.Windows.Visibility.Visible)
+                    {
+                        this.waitControl.Visibility = Visibility.Collapsed;
+                    }
                 }
                 else
                 {
@@ -352,7 +359,7 @@ namespace RestaurantBeeper
                     DataRetriever.CallBackOnImageRetrieval imageRetrieved = new DataRetriever.CallBackOnImageRetrieval(this.ImageReady);
                     DataRetriever.ImageRetrieved = imageRetrieved;
 
-                    DataRetriever.GetImageFile(this.restaurantSettings.RestaurantImagePath);
+                    DataRetriever.RetrieveImageFile(this.restaurantSettings.RestaurantImagePath);
                 }
                 catch (System.Exception ex2)
                 {
@@ -370,6 +377,11 @@ namespace RestaurantBeeper
                 imageBrush = new ImageBrush();
                 imageBrush.ImageSource = bitmapImage;
                 this.SetPanoBackground(imageBrush);
+
+                if (this.waitControl.Visibility == System.Windows.Visibility.Visible)
+                {
+                    this.waitControl.Visibility = Visibility.Collapsed;
+                }
             }
         }
 
