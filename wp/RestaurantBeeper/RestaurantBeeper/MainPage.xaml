@@ -1,5 +1,4 @@
 ﻿<phone:PhoneApplicationPage
-    x:Class="RestaurantBeeper.MainPage"
     xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:phone="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone"
@@ -7,6 +6,8 @@
     xmlns:controls="clr-namespace:Microsoft.Phone.Controls;assembly=Microsoft.Phone.Controls"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:local="clr-namespace:RestaurantBeeper"
+    x:Class="RestaurantBeeper.MainPage"
     mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="728"
     FontFamily="{StaticResource PhoneFontFamilyNormal}"
     FontSize="{StaticResource PhoneFontSizeNormal}"
@@ -14,28 +15,40 @@
     SupportedOrientations="Portrait"  Orientation="Portrait"
     shell:SystemTray.IsVisible="False">
 
+    <phone:PhoneApplicationPage.ApplicationBar>
+        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
+            <shell:ApplicationBar.MenuItems>
+                <shell:ApplicationBarMenuItem Text="TestFunction 1" Click="ApplicationBarMenuItem_Click" />
+                <shell:ApplicationBarMenuItem Text="TestFunction 2" Click="ApplicationBarMenuItem_Click_1" />
+            </shell:ApplicationBar.MenuItems>
+            <shell:ApplicationBarIconButton IconUri="/Images/appbar.feature.search.rest.png" Text="Scan" Click="ApplicationBarIconButton_Click" />
+            <shell:ApplicationBarIconButton IconUri="/Images/appbar.refresh.rest.png" Text="Refresh" />
+            <shell:ApplicationBarIconButton IconUri="/Images/appbar.feature.settings.rest.png" Text="Settings" Click="ApplicationBarIconButton_Click_1" />
+        </shell:ApplicationBar>
+    </phone:PhoneApplicationPage.ApplicationBar>
+
     <!--LayoutRoot contains the root grid where all other page content is placed-->
     <Grid x:Name="LayoutRoot">
-        <controls:Panorama Name="MainPano"  Title="restaurant beeper">
+        <controls:Panorama x:Name="MainPano"  Title="restaurant beeper">
 
             <!--Panorama item one-->
             <controls:PanoramaItem Header="Reserve">
                 <Grid x:Name="ContentPanel" Grid.Row="1" Margin="12,0,12,0">
-                    <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Margin="1,0,0,0" Name="textBlock1" Text="Hi! If you're ready to reserve, tap the button below. You'll need a QR code provided by the restuarant in order to continue. Ask for assistance if you have any problems." Width="395" Height="121" VerticalAlignment="Top" />
-                    <TextBlock Height="30" HorizontalAlignment="Left" Margin="18,305,0,0" Name="textBlockQRSample" Text="You'll need a QR code that looks like this:" VerticalAlignment="Top" />
-                    <Image Height="62" HorizontalAlignment="Left" Margin="168,346,0,0" Name="image1" Stretch="Fill" VerticalAlignment="Top" Width="62" Source="Images/Sample.QR.png" />
+                    <TextBlock TextWrapping="Wrap" HorizontalAlignment="Left" Margin="1,0,0,0" x:Name="textBlock1" Text="Hi! If you're ready to reserve, tap the button below. You'll need a QR code provided by the restuarant in order to continue. Ask for assistance if you have any problems." Width="395" Height="121" VerticalAlignment="Top" />
+                    <TextBlock Height="30" HorizontalAlignment="Left" Margin="18,305,0,0" x:Name="textBlockQRSample" Text="You'll need a QR code that looks like this:" VerticalAlignment="Top" />
+                    <Image Height="62" HorizontalAlignment="Left" Margin="168,346,0,0" x:Name="image1" Stretch="Fill" VerticalAlignment="Top" Width="62" Source="Images/Sample.QR.png" />
                 </Grid>
             </controls:PanoramaItem>
 
             <controls:PanoramaItem Header="Wait" CacheMode="BitmapCache">
                 <Grid>
-                    <StackPanel Height="498" HorizontalAlignment="Left" Margin="0,0,0,0" Name="stackPanelWait" VerticalAlignment="Top" Width="419">
-                        <TextBlock Height="127" TextWrapping="Wrap"  Name="textBlockNotWaiting" Text="Hey, it looks like you're not yet waiting. Go over to the Reserve pane to get started!" FontSize="30" />
-                        <TextBlock Height="50" Name="textBlockRestaurantName" Text="[RestaurantName]" FontSize="30" Visibility="Collapsed" />
-                        <TextBlock Height="50" Name="testBlockGuestName" Text="[GuestName]" FontSize="30" Visibility="Collapsed" />
-                        <TextBlock Height="50" Name="textBlockNumberOfGuests" Text="[NumberOfGuests]" FontSize="30" Visibility="Collapsed" />
-                        <TextBlock Height="50" Name="textBlockTimeToWait" Text="[TimeToWait]" FontSize="30" Visibility="Collapsed" />
-                        <ProgressBar Height="4" Name="progressBarWaitTime" Width="460" IsIndeterminate="True" Visibility="Collapsed" />
+                    <StackPanel Height="498" HorizontalAlignment="Left" Margin="0,0,0,0" x:Name="stackPanelWait" VerticalAlignment="Top" Width="419">
+                        <TextBlock Height="127" TextWrapping="Wrap"  x:Name="textBlockNotWaiting" Text="Hey, it looks like you're not yet waiting. Go over to the Reserve pane to get started!" FontSize="30" />
+                        <TextBlock Height="50" x:Name="textBlockRestaurantName" Text="[RestaurantName]" FontSize="30" Visibility="Collapsed" />
+                        <TextBlock Height="50" x:Name="testBlockGuestName" Text="[GuestName]" FontSize="30" Visibility="Collapsed" />
+                        <TextBlock Height="50" x:Name="textBlockNumberOfGuests" Text="[NumberOfGuests]" FontSize="30" Visibility="Collapsed" />
+                        <TextBlock Height="50" x:Name="textBlockTimeToWait" Text="[TimeToWait]" FontSize="30" Visibility="Collapsed" />
+                        <ProgressBar Height="4" x:Name="progressBarWaitTime" Width="460" IsIndeterminate="True" Visibility="Collapsed" />
                     </StackPanel>
                 </Grid>
             </controls:PanoramaItem>
@@ -43,8 +56,8 @@
             <!--Panorama item two-->
             <controls:PanoramaItem Header="Action">
                 <Grid>
-                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" Name="stackPanelAction" VerticalAlignment="Top" Width="416">
-                        <TextBlock Height="30" Name="textBlockActionNotAvailable" Text="There are no actions available at this time." />
+                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" x:Name="stackPanelAction" VerticalAlignment="Top" Width="416">
+                        <TextBlock Height="30" x:Name="textBlockActionNotAvailable" Text="There are no actions available at this time." />
                     </StackPanel>
                 </Grid>
             </controls:PanoramaItem>
@@ -52,8 +65,8 @@
             <!--Panorama item three-->
             <controls:PanoramaItem Header="Offers">
                 <Grid>
-                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" Name="stackPanelOffers" VerticalAlignment="Top" Width="416">
-                        <TextBlock Height="30" Name="textBlockOffersNotAvailable" Text="There are no offers available at this time." />
+                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" x:Name="stackPanelOffers" VerticalAlignment="Top" Width="416">
+                        <TextBlock Height="30" x:Name="textBlockOffersNotAvailable" Text="There are no offers available at this time." />
                     </StackPanel>
                 </Grid>
             </controls:PanoramaItem>
@@ -61,8 +74,8 @@
             <!--Panorama item four-->
             <controls:PanoramaItem Header="Information">
                 <Grid>
-                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" Name="stackPanelInformation" VerticalAlignment="Top" Width="416">
-                        <TextBlock TextWrapping="Wrap" Height="62" Name="textBlockInformationNotAvailable" Text="There is no additional information available at this time." />
+                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" x:Name="stackPanelInformation" VerticalAlignment="Top" Width="416">
+                        <TextBlock TextWrapping="Wrap" Height="62" x:Name="textBlockInformationNotAvailable" Text="There is no additional information available at this time." />
                     </StackPanel>
                 </Grid>
             </controls:PanoramaItem>
@@ -70,25 +83,14 @@
             <!--Panorama item five-->
             <controls:PanoramaItem Header="Help">
                 <Grid>
-                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" Name="stackPanelHelp" VerticalAlignment="Top" Width="416">
-                        <TextBlock TextWrapping="Wrap" Height="30" Name="textBlockHelpNotAvailable" Text="There is no additional help available at this time." />
+                    <StackPanel Height="425" HorizontalAlignment="Left" Margin="0,1,0,0" x:Name="stackPanelHelp" VerticalAlignment="Top" Width="416">
+                        <TextBlock TextWrapping="Wrap" Height="30" x:Name="textBlockHelpNotAvailable" Text="There is no additional help available at this time." />
                     </StackPanel>
                 </Grid>
             </controls:PanoramaItem>
         </controls:Panorama>
+        <local:WaitControl x:Name="waitControl" Visibility="Collapsed" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="0,0,0,-70" Height="798" />
     </Grid>
-
-    <phone:PhoneApplicationPage.ApplicationBar>
-        <shell:ApplicationBar IsVisible="True" IsMenuEnabled="True">
-            <shell:ApplicationBarIconButton IconUri="/Images/appbar.feature.search.rest.png" Text="Scan" Click="ApplicationBarIconButton_Click" />
-            <shell:ApplicationBarIconButton IconUri="/Images/appbar.refresh.rest.png" Text="Refresh" />
-            <shell:ApplicationBarIconButton IconUri="/Images/appbar.feature.settings.rest.png" Text="Settings" Click="ApplicationBarIconButton_Click_1" />
-            <shell:ApplicationBar.MenuItems>
-                <shell:ApplicationBarMenuItem Text="TestFunction 1" Click="ApplicationBarMenuItem_Click" />
-                <shell:ApplicationBarMenuItem Text="TestFunction 2" Click="ApplicationBarMenuItem_Click_1" />
-            </shell:ApplicationBar.MenuItems>
-        </shell:ApplicationBar>
-    </phone:PhoneApplicationPage.ApplicationBar>
 
     <!--Panorama-based applications should not show an ApplicationBar-->
 </phone:PhoneApplicationPage>

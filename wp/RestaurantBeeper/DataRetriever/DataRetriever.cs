@@ -73,7 +73,7 @@ namespace RestaurantBeeper
             webClient.DownloadStringAsync(UserURLs.RestaurantUri);
         }
 
-        public static void GetImageFile(Uri imageUri)
+        public static void RetrieveImageFile(Uri imageUri)
         {
             WebClient webClient = new WebClient();
             webClient.OpenReadCompleted += new OpenReadCompletedEventHandler(DownloadImageCompleted);
@@ -236,7 +236,6 @@ namespace RestaurantBeeper
 
         public static void CodeRetrieved(string result)
         {
-            result = result.Replace("descartes:8000", "restaurant.kaelspencer.com");
             UserURLs.RegistrationUri = new Uri(result);
 
             UriBuilder uriBuilder = new UriBuilder(result);
