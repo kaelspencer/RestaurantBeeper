@@ -1,6 +1,0 @@
-http://www.colourlovers.com/palette/146/CarIm4CliVic
-
-Cardura:    #565d60 (86, 93, 96)
-Imdur/4:    #f6f6f6 (246, 246, 246)
-Clindamycin:#b0bec5 (176, 190, 197)
-Vicodin:    #90cdef (144, 205, 239)

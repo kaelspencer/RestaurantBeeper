@@ -1,7 +1,7 @@
 @import url(text.css);
 
 body {
-    background: rgb(246, 246, 246) url(../images/subtle_grunge.png);
+    background: rgb(235, 235, 235) url(../images/subtle_grunge.png);
 }
 
 .column {
@@ -19,8 +19,8 @@ body {
 .column li.reservation {
     margin: 0px;
     padding: 10px;
-    border-bottom: 4px rgb(246, 246, 246) solid;
-    background-color: rgba(176, 190, 197, 0.4);
+    border-bottom: 4px rgb(235, 235, 235) solid;
+    background-color: rgba(44, 59, 99, 0.5);
     line-height: 40px;
     height: 40px;
     width: -moz-calc(100% - 4px);
