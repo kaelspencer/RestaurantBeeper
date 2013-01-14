@@ -1,14 +1,10 @@
 {% extends "base.html" %}
 
-{% block body %}
+{% block content %}
 <p> We're going to register! </p>
 
 <form action="/reserve/" method="post">{% csrf_token %}
     {{ form.as_p }}
     <input type="submit" value="Submit" />
 </form>
-
-<!--
-<img class="qrcode" src="{{ qrcode_url }}" width="500" height="500" alt="{{ qrcode_url }}" />
--->
 {% endblock %}
