@@ -1,13 +1,4 @@
 ﻿using System;
-using System.Net;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Documents;
-using System.Windows.Ink;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Animation;
-using System.Windows.Shapes;
 using System.IO;
 using System.IO.IsolatedStorage;
 using System.Windows.Media.Imaging;
@@ -110,35 +101,55 @@ namespace RestaurantBeeper
     public class UserSettings
     {
         public bool IsWaiting { get; set; }
+
         public string UserKey { get; set; }
+
         public string RestaurantName { get; set; }
+
         public string GuestName { get; set; }
+
         public int NumberOfGuests { get; set; }
+
         public int StartTimeToWait { get; set; }
+
         public int LastTimeToWait { get; set; }
+
         public Uri HostUri { get; set; }
+
         public Uri RegistrationUri { get; set; }
+
         public Uri RetrievalUri { get; set; }
+
         public DateTime TimeStarted { get; set; }
+
         public DateTime TimeLastChecked { get; set; }
+
         public DateTime TimeExpected { get; set; }
     }
 
     public class RestaurantSettings
     {
         public Uri RestaurantImagePath { get; set; }
+
         public string RestaurantImageName { get; set; }
+
         public string PrimaryColor { get; set; }
+
         public string SecondaryColor { get; set; }
     }
 
     public static class UserURLs
     {
         public static Uri HostUri { get; set; }
+
         public static Uri RegistrationUri { get; set; }
+
         public static Uri RetrievalUri { get; set; }
+
         public static Uri CancelUri { get; set; }
+
         public static Uri DelayUri { get; set; }
+
         public static Uri RestaurantUri { get; set; }
 
         public static void Save()

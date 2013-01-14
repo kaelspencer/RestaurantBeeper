@@ -3,7 +3,6 @@ using System.IO;
 using System.Net;
 using System.Runtime.Serialization.Json;
 using System.Text;
-using System.Windows;
 using System.Windows.Resources;
 
 namespace RestaurantBeeper
@@ -11,8 +10,11 @@ namespace RestaurantBeeper
     public static class DataRetriever
     {
         public delegate void CallBackOnRegistration();
+
         public delegate void CallBackOnRetrieval(UserSettings userSettings);
+
         public delegate void CallBackOnRestaurant(RestaurantSettings restaurantData);
+
         public delegate void CallBackOnImageRetrieval(byte[] image);
 
         /// <summary>
@@ -29,12 +31,12 @@ namespace RestaurantBeeper
         /// The method to call after the data is successfully retrieved
         /// </summary>
         public static CallBackOnRetrieval DataRetrievedSuccessfully { get; set; }
-        
+
         /// <summary>
         /// The method to call if the data retrieval fails
         /// </summary>
         public static CallBackOnRetrieval DataRetrievedFailure { get; set; }
-        
+
         /// <summary>
         /// The method to call after the restaurant info is successfully retrieved
         /// </summary>
@@ -44,7 +46,7 @@ namespace RestaurantBeeper
         /// The method to call after the restaurant info fails to be retrieved
         /// </summary>
         public static CallBackOnRestaurant RestaurantRetrievedFailure { get; set; }
-        
+
         /// <summary>
         /// The method to call after an image has been downloaded
         /// </summary>
@@ -77,7 +79,6 @@ namespace RestaurantBeeper
             webClient.OpenReadCompleted += new OpenReadCompletedEventHandler(DownloadImageCompleted);
             webClient.OpenReadAsync(imageUri);
         }
-
 
         public static void DownloadImageCompleted(object sender, OpenReadCompletedEventArgs e)
         {
@@ -160,10 +161,13 @@ namespace RestaurantBeeper
                     switch (retrievedHeader.code)
                     {
                         case 1:
+
                             // TODO: What's this error code definition?
                             //MessageBox.Show("When attempting to contact the server, we received an error code of '1'. Please try again or ask for assistance.", "Hmm...", MessageBoxButton.OK);
                             break;
+
                         default:
+
                             //MessageBox.Show(String.Format("When attempting to contact the server, we received an unknown error code of '{0}'. Please try again or ask for assistance.", retrievedHeader.code), "Whoops...", MessageBoxButton.OK);
                             break;
                     }

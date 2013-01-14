@@ -1,8 +1,9 @@
 ﻿#define DEBUG_AGENT
-using System;
-using System.Windows;
+
 using Microsoft.Phone.Scheduler;
 using Microsoft.Phone.Shell;
+using System;
+using System.Windows;
 
 namespace RestaurantBeeperAgent
 {
@@ -18,6 +19,7 @@ namespace RestaurantBeeperAgent
             if (!_classInitialized)
             {
                 _classInitialized = true;
+
                 // Subscribe to the managed exception handler
                 Deployment.Current.Dispatcher.BeginInvoke(delegate
                 {
@@ -67,7 +69,7 @@ namespace RestaurantBeeperAgent
 
             // If debugging is enabled, launch the agent again in one minute.
 #if DEBUG_AGENT
-  ScheduledActionService.LaunchForTest(task.Name, TimeSpan.FromSeconds(60));
+            ScheduledActionService.LaunchForTest(task.Name, TimeSpan.FromSeconds(60));
 #endif
 
             // Call NotifyComplete to let the system know the agent is done working.

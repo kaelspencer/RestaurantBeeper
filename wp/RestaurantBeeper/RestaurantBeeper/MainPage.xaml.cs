@@ -1,19 +1,22 @@
 ﻿#define DEBUG_AGENT
+
+using Microsoft.Phone.Controls;
+using Microsoft.Phone.Scheduler;
 using System;
+using System.Collections.Generic;
+using System.Threading;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using Microsoft.Phone.Controls;
-using Microsoft.Phone.Scheduler;
-using System.Collections.Generic;
-using System.Threading;
 
 namespace RestaurantBeeper
 {
     public partial class MainPage : PhoneApplicationPage
     {
         private enum PanoPages { Reserve = 0, Wait, Action, Offers, Info, Help }
+
         private UserSettings userSettings { get; set; }
+
         private RestaurantSettings restaurantSettings { get; set; }
 
         private Timer updateTimer;
@@ -71,6 +74,7 @@ namespace RestaurantBeeper
         }
 
         private int count = 0;
+
         private void FirstUpdateUserSettings(UserSettings updatedUserSettings)
         {
             this.userSettings = updatedUserSettings;
@@ -121,7 +125,6 @@ namespace RestaurantBeeper
 
         private void UserRetrievalFailure(UserSettings userSettings)
         {
-
         }
 
         private void InitWaitingPano()
@@ -158,7 +161,6 @@ namespace RestaurantBeeper
                     {
                         this.LoadImage();
                     }
-
                 }
                 catch (Exception ex)
                 {
@@ -169,9 +171,9 @@ namespace RestaurantBeeper
 
         #region BackgroundAgent
 
-        PeriodicTask periodicTask;
+        private PeriodicTask periodicTask;
 
-        string periodicTaskName = "PeriodicAgent";
+        private string periodicTaskName = "PeriodicAgent";
         public bool agentsAreEnabled = true;
 
         private void StartPeriodicAgent()
@@ -187,7 +189,7 @@ namespace RestaurantBeeper
                     periodicTask = ScheduledActionService.Find(periodicTaskName) as PeriodicTask;
 
                     // If the task already exists and background agents are enabled for the
-                    // application, you must remove the task and then add it again to update 
+                    // application, you must remove the task and then add it again to update
                     // the schedule
                     if (periodicTask != null)
                     {
@@ -204,6 +206,7 @@ namespace RestaurantBeeper
                     try
                     {
                         ScheduledActionService.Add(periodicTask);
+
                         //PeriodicStackPanel.DataContext = periodicTask;
 
                         // If debugging is enabled, use LaunchForTest to launch the agent in one minute.
@@ -217,14 +220,15 @@ namespace RestaurantBeeper
                         {
                             MessageBox.Show("Background agents for this application have been disabled by the user.");
                             agentsAreEnabled = false;
+
                             //PeriodicCheckBox.IsChecked = false;
                         }
 
                         if (exception.Message.Contains("BNS Error: The maximum number of ScheduledActions of this type have already been added."))
                         {
                             // No user action required. The system prompts the user when the hard limit of periodic tasks has been reached.
-
                         }
+
                         //PeriodicCheckBox.IsChecked = false;
                     }
                     catch (SchedulerServiceException)
@@ -262,9 +266,10 @@ namespace RestaurantBeeper
             }
         }
 
-        #endregion
+        #endregion BackgroundAgent
 
         #region Helpers
+
         private bool TryLoadSettings()
         {
             try
@@ -340,7 +345,7 @@ namespace RestaurantBeeper
             }
             catch (Exception)
             {
-                // Something went wrong while trying to retrieve the image from internal storage. 
+                // Something went wrong while trying to retrieve the image from internal storage.
                 // Try to download and save the image
                 try
                 {
@@ -396,9 +401,10 @@ namespace RestaurantBeeper
             return new SolidColorBrush(Color.FromArgb(alpha, red, green, blue));
         }
 
-        #endregion
+        #endregion Helpers
 
         #region Events
+
         protected override void OnNavigatedTo(System.Windows.Navigation.NavigationEventArgs e)
         {
             base.OnNavigatedTo(e);
@@ -429,7 +435,7 @@ namespace RestaurantBeeper
         }
 
         private void ApplicationBarIconButton_Click(object sender, EventArgs e)
-        {            
+        {
             NavigationService.Navigate(new Uri("/ScanPage.xaml", UriKind.Relative));
         }
 
@@ -441,7 +447,6 @@ namespace RestaurantBeeper
         // Test code
         private void ApplicationBarMenuItem_Click(object sender, EventArgs e)
         {
-
             UserSettings userSettings = new UserSettings();
             userSettings.IsWaiting = true;
             userSettings.UserKey = "ABC";
@@ -456,6 +461,7 @@ namespace RestaurantBeeper
             userSettings.TimeStarted = DateTime.Now;
             userSettings.TimeLastChecked = DateTime.Now;
             userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
+
             //userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
             //userSettings.RestaurantImagePath = new Uri("http://wac.450f.edgecastcdn.net/80450F/103gbfrocks.com/files/2011/11/Buffalo-Wild-Wings-wings.jpg", UriKind.Absolute);
             //userSettings.RestaurantImageName = "Image2.jpg";
@@ -471,7 +477,7 @@ namespace RestaurantBeeper
         }
 
         // End Test code
-        #endregion
 
+        #endregion Events
     }
 }

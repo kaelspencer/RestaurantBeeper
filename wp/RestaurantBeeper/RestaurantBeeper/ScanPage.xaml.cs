@@ -1,6 +1,6 @@
-﻿using System;
+﻿using Microsoft.Phone.Controls;
+using System;
 using System.Windows;
-using Microsoft.Phone.Controls;
 
 namespace RestaurantBeeper
 {
@@ -87,7 +87,7 @@ namespace RestaurantBeeper
             {
                 this.qrScanner.StopScanning();
             }
-            else if(this.toggleSwitch1.IsChecked.Value)
+            else if (this.toggleSwitch1.IsChecked.Value)
             {
                 this.qrScanner.StartScanning();
             }
