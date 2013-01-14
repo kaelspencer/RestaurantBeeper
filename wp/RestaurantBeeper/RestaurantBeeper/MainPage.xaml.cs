@@ -13,7 +13,8 @@ namespace RestaurantBeeper
     public partial class MainPage : PhoneApplicationPage
     {
         private enum PanoPages { Reserve = 0, Wait, Action, Offers, Info, Help }
-        public UserSettings userSettings { get; set; }
+        private UserSettings userSettings { get; set; }
+        private RestaurantSettings restaurantSettings { get; set; }
 
         private Timer updateTimer;
         private bool ImageLoaded;
@@ -50,7 +51,7 @@ namespace RestaurantBeeper
 
         private void StartTimer(uint delay = 0)
         {
-            updateTimer = new Timer(new TimerCallback(this.UpdateReservation), null, delay, 10000);
+            this.updateTimer = new Timer(new TimerCallback(this.UpdateReservation), null, delay, 10000);
             this.SetDefaultPanoPage(PanoPages.Wait);
         }
 
@@ -61,7 +62,7 @@ namespace RestaurantBeeper
 
         private void UserRegistrationFailure()
         {
-
+            // TODO: What do we do if registration fails?
         }
 
         private void UpdateReservation(Object obj)
@@ -75,6 +76,15 @@ namespace RestaurantBeeper
             this.userSettings = updatedUserSettings;
             InternalStorage.SaveToIsolatedStorage("UserSettings", this.userSettings);
             UserURLs.Save();
+
+            DataRetriever.RestaurantRetrievedSuccessfully = new DataRetriever.CallBackOnRestaurant(this.FirstUpdateRestaurantInfo);
+            DataRetriever.RetrieveRestaurant();
+        }
+
+        private void FirstUpdateRestaurantInfo(RestaurantSettings restaurantSettings)
+        {
+            this.restaurantSettings = restaurantSettings;
+            InternalStorage.SaveToIsolatedStorage("RestaurantSettings", this.restaurantSettings);
 
             if (this.userSettings.LastTimeToWait > 0)
             {
@@ -126,7 +136,7 @@ namespace RestaurantBeeper
                     this.textBlockTimeToWait.Text = userSettings.LastTimeToWait + "minutes";
 
                     // TODO: Get the real color via the service...
-                    this.MainPano.Foreground = this.ConvertHexToBrush("#FFF5F500");
+                    this.MainPano.Foreground = this.ConvertHexToBrush(this.restaurantSettings.PrimaryColor);
 
                     foreach (UIElement element in this.stackPanelWait.Children)
                     {
@@ -144,7 +154,7 @@ namespace RestaurantBeeper
                         this.progressBarWaitTime.Value = 100 - ((((float)userSettings.StartTimeToWait - (float)userSettings.LastTimeToWait) / (float)userSettings.StartTimeToWait) * 100);
                     }
 
-                    if (!this.ImageLoaded && this.userSettings.RestaurantImagePath != null)
+                    if (!this.ImageLoaded && this.restaurantSettings.RestaurantImagePath != null)
                     {
                         this.LoadImage();
                     }
@@ -260,6 +270,7 @@ namespace RestaurantBeeper
             try
             {
                 this.userSettings = InternalStorage.LoadFromIsolatedStorage<UserSettings>("UserSettings");
+                this.restaurantSettings = InternalStorage.LoadFromIsolatedStorage<RestaurantSettings>("RestaurantSettings");
                 UserURLs.Load();
                 return this.userSettings.IsWaiting;
             }
@@ -313,7 +324,7 @@ namespace RestaurantBeeper
             try
             {
                 // Try to load the image from internal storage in case we already have it
-                bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
+                bitmapImage = InternalStorage.RetrieveImage(this.restaurantSettings.RestaurantImageName);
 
                 if (bitmapImage != null)
                 {
@@ -336,7 +347,7 @@ namespace RestaurantBeeper
                     DataRetriever.CallBackOnImageRetrieval imageRetrieved = new DataRetriever.CallBackOnImageRetrieval(this.ImageReady);
                     DataRetriever.ImageRetrieved = imageRetrieved;
 
-                    DataRetriever.GetImageFile(this.userSettings.RestaurantImagePath);
+                    DataRetriever.GetImageFile(this.restaurantSettings.RestaurantImagePath);
                 }
                 catch (System.Exception ex2)
                 {
@@ -347,10 +358,10 @@ namespace RestaurantBeeper
 
         private void ImageReady(byte[] imageContents)
         {
-            if (InternalStorage.SaveImage(this.userSettings.RestaurantImageName, imageContents))
+            if (InternalStorage.SaveImage(this.restaurantSettings.RestaurantImageName, imageContents))
             {
                 ImageBrush imageBrush = new ImageBrush();
-                BitmapImage bitmapImage = InternalStorage.RetrieveImage(this.userSettings.RestaurantImageName);
+                BitmapImage bitmapImage = InternalStorage.RetrieveImage(this.restaurantSettings.RestaurantImageName);
                 imageBrush = new ImageBrush();
                 imageBrush.ImageSource = bitmapImage;
                 this.SetPanoBackground(imageBrush);
@@ -404,6 +415,11 @@ namespace RestaurantBeeper
             {
                 if (bool.Parse(result))
                 {
+                    DataRetriever.DataRetrievedSuccessfully = new DataRetriever.CallBackOnRetrieval(this.FirstUpdateUserSettings);
+                    if (this.updateTimer != null)
+                    {
+                        this.updateTimer.Dispose();
+                    }
                     DataRetriever.RegisterUser();
                 }
             }
@@ -413,8 +429,7 @@ namespace RestaurantBeeper
         }
 
         private void ApplicationBarIconButton_Click(object sender, EventArgs e)
-        {
-            
+        {            
             NavigationService.Navigate(new Uri("/ScanPage.xaml", UriKind.Relative));
         }
 
@@ -441,9 +456,9 @@ namespace RestaurantBeeper
             userSettings.TimeStarted = DateTime.Now;
             userSettings.TimeLastChecked = DateTime.Now;
             userSettings.TimeExpected = DateTime.Now.AddMinutes(userSettings.LastTimeToWait);
-            userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
+            //userSettings.RestaurantImagePath = new Uri("http://www.sattestpreptips.com/wp-content/plugins/sociable/buffalo-wild-wings-sauces-buy-747.jpg", UriKind.Absolute);
             //userSettings.RestaurantImagePath = new Uri("http://wac.450f.edgecastcdn.net/80450F/103gbfrocks.com/files/2011/11/Buffalo-Wild-Wings-wings.jpg", UriKind.Absolute);
-            userSettings.RestaurantImageName = "Image2.jpg";
+            //userSettings.RestaurantImageName = "Image2.jpg";
 
             InternalStorage.SaveToIsolatedStorage("UserSettings", userSettings);
             InternalStorage.CommitToIsolatedStorage();

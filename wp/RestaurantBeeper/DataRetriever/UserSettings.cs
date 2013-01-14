@@ -80,7 +80,6 @@ namespace RestaurantBeeper
             }
             catch (Exception ex)
             {
-                throw ex;
                 return false;
             }
         }
@@ -123,8 +122,14 @@ namespace RestaurantBeeper
         public DateTime TimeStarted { get; set; }
         public DateTime TimeLastChecked { get; set; }
         public DateTime TimeExpected { get; set; }
+    }
+
+    public class RestaurantSettings
+    {
         public Uri RestaurantImagePath { get; set; }
         public string RestaurantImageName { get; set; }
+        public string PrimaryColor { get; set; }
+        public string SecondaryColor { get; set; }
     }
 
     public static class UserURLs

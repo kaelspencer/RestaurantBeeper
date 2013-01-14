@@ -37,6 +37,7 @@
                     <TextBlock TextWrapping="Wrap" Height="63" HorizontalAlignment="Left" Margin="8,6,0,0" Name="textBlock1" Text="We're sorry we can't scan a QR code right now. Please enter the manual code below." VerticalAlignment="Top" Width="440" />
                     <TextBox Height="72" HorizontalAlignment="Left" Margin="8,73,0,0" Name="textBox1" Text="" VerticalAlignment="Top" Width="440" />
                     <Button Content="Done" Height="72" HorizontalAlignment="Right" Margin="0,145,8,0" Name="buttonDone" VerticalAlignment="Top" Width="160" Click="buttonDone_Click" />
+                    <Button Content="TEST" HorizontalAlignment="Left" Margin="160,358,0,0" VerticalAlignment="Top" Click="Button_Click_1"/>
                 </Grid>
             </controls:PivotItem>
         </controls:Pivot>

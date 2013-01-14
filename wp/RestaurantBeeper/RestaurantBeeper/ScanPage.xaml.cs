@@ -92,5 +92,11 @@ namespace RestaurantBeeper
                 this.qrScanner.StartScanning();
             }
         }
+
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            this.QRCodeScanner_ScanComplete(this, new JeffWilcox.Controls.ScanCompleteEventArgs("http://restaurant.kaelspencer.com/register/jlCOyvDERtgJrScoJ73D/"));
+            buttonWaiting_Click(this, null);
+        }
     }
 }

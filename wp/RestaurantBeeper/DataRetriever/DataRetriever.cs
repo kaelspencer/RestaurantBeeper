@@ -12,6 +12,7 @@ namespace RestaurantBeeper
     {
         public delegate void CallBackOnRegistration();
         public delegate void CallBackOnRetrieval(UserSettings userSettings);
+        public delegate void CallBackOnRestaurant(RestaurantSettings restaurantData);
         public delegate void CallBackOnImageRetrieval(byte[] image);
 
         /// <summary>
@@ -20,7 +21,7 @@ namespace RestaurantBeeper
         public static CallBackOnRegistration UserRegisteredSuccessfully { get; set; }
 
         /// <summary>
-        /// The method to call after the user is successfully registered
+        /// The method to call if the user fails to be registered
         /// </summary>
         public static CallBackOnRegistration UserRegisteredFailure { get; set; }
 
@@ -28,13 +29,22 @@ namespace RestaurantBeeper
         /// The method to call after the data is successfully retrieved
         /// </summary>
         public static CallBackOnRetrieval DataRetrievedSuccessfully { get; set; }
-
-
+        
         /// <summary>
-        /// The method to call after the data is successfully retrieved
+        /// The method to call if the data retrieval fails
         /// </summary>
         public static CallBackOnRetrieval DataRetrievedFailure { get; set; }
+        
+        /// <summary>
+        /// The method to call after the restaurant info is successfully retrieved
+        /// </summary>
+        public static CallBackOnRestaurant RestaurantRetrievedSuccessfully { get; set; }
 
+        /// <summary>
+        /// The method to call after the restaurant info fails to be retrieved
+        /// </summary>
+        public static CallBackOnRestaurant RestaurantRetrievedFailure { get; set; }
+        
         /// <summary>
         /// The method to call after an image has been downloaded
         /// </summary>
@@ -43,22 +53,29 @@ namespace RestaurantBeeper
         public static void RegisterUser()
         {
             WebClient webClient = new WebClient();
-            webClient.DownloadStringAsync(UserURLs.RegistrationUri);
             webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DataRetriever.DownloadRegisterCompleted);
+            webClient.DownloadStringAsync(UserURLs.RegistrationUri);
         }
 
         public static void RetrieveUser()
         {
             WebClient webClient = new WebClient();
-            webClient.DownloadStringAsync(UserURLs.RetrievalUri);
             webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DataRetriever.DownloadRetrieveCompleted);
+            webClient.DownloadStringAsync(UserURLs.RetrievalUri);
+        }
+
+        public static void RetrieveRestaurant()
+        {
+            WebClient webClient = new WebClient();
+            webClient.DownloadStringCompleted += new DownloadStringCompletedEventHandler(DataRetriever.DownloadRestaurantCompleted);
+            webClient.DownloadStringAsync(UserURLs.RestaurantUri);
         }
 
         public static void GetImageFile(Uri imageUri)
         {
-            WebClient client = new WebClient();
-            client.OpenReadCompleted += new OpenReadCompletedEventHandler(DownloadImageCompleted);
-            client.OpenReadAsync(imageUri);
+            WebClient webClient = new WebClient();
+            webClient.OpenReadCompleted += new OpenReadCompletedEventHandler(DownloadImageCompleted);
+            webClient.OpenReadAsync(imageUri);
         }
 
 
@@ -67,7 +84,7 @@ namespace RestaurantBeeper
             var resInfo = new StreamResourceInfo(e.Result, null);
             var reader = new StreamReader(resInfo.Stream);
             byte[] contents;
-            
+
             using (BinaryReader bReader = new BinaryReader(reader.BaseStream))
             {
                 contents = bReader.ReadBytes((int)reader.BaseStream.Length);
@@ -93,7 +110,7 @@ namespace RestaurantBeeper
                 UserURLs.DelayUri = uriBuilder.Uri;
                 uriBuilder.Path = uriBuilder.Path.Replace(registrationData.delay_url, registrationData.restaurant_url);
                 UserURLs.RestaurantUri = uriBuilder.Uri;
-                
+
                 if (DataRetriever.UserRegisteredSuccessfully != null)
                 {
                     DataRetriever.UserRegisteredSuccessfully();
@@ -164,6 +181,35 @@ namespace RestaurantBeeper
                 if (DataRetriever.DataRetrievedFailure != null)
                 {
                     DataRetriever.DataRetrievedFailure(null);
+                }
+            }
+        }
+
+        private static void DownloadRestaurantCompleted(object sender, DownloadStringCompletedEventArgs e)
+        {
+            try
+            {
+                string result = e.Result;
+                RestaurantData restaurantInfo = ParseJson<RestaurantData>(result);
+
+                RestaurantSettings restaurantSettings = new RestaurantSettings();
+                restaurantSettings.RestaurantImagePath = new Uri(restaurantInfo.background_image_url);
+                restaurantSettings.RestaurantImageName = "Image.jpg";
+                restaurantSettings.PrimaryColor = restaurantInfo.primary_color;
+                restaurantSettings.SecondaryColor = restaurantInfo.secondary_color;
+
+                if (DataRetriever.RestaurantRetrievedSuccessfully != null)
+                {
+                    DataRetriever.RestaurantRetrievedSuccessfully(restaurantSettings);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                // TODO: Properly handle errors. e.g. 404, not found, etc.
+
+                if (DataRetriever.RestaurantRetrievedFailure != null)
+                {
+                    DataRetriever.RestaurantRetrievedFailure(null);
                 }
             }
         }
