@@ -1,13 +1,20 @@
-@import url(text.css);
-
 body {
     background: rgb(235, 235, 235) url(../images/subtle_grunge.png);
+    padding: 0;
 }
 
+/* Header */
+
+header {
+    height: 80px;
+    margin-bottom: 40px;
+    background-color: rgb(86, 93, 96);
+}
+
+/* Reservations */
+
 .column {
-    width: 350px;
-    margin: 0px auto;
-    padding: 10px;
+    padding: 0;
 }
 
 .column ul {
@@ -18,14 +25,11 @@ body {
 
 .column li.reservation {
     margin: 0px;
-    padding: 10px;
+    padding: 0px;
     border-bottom: 4px rgb(235, 235, 235) solid;
     background-color: rgba(44, 59, 99, 0.5);
     line-height: 40px;
     height: 40px;
-    width: -moz-calc(100% - 4px);
-    width: -webkit-calc(100% - 4px);
-    width: calc(100% - 4px);
 }
 
 .column li.reservation:first-child {
@@ -38,25 +42,11 @@ body {
 }
 
 /* From here on out get a little loose with selectors. Assume .reservation is only used in the list described above. */
-
-.reservation .section {
-    width: 33%;
-    margin: 0px;
-    padding: 0px;
-    display: inline;
-    float: left;
+.reservation div span.text {
+    padding: 10px;
 }
-.reservation .section:last-child {
-    width: 34%;
-    font-size: 3.7rem;
+
+.reservation div:last-child {
+    font-size: 3.7em;
     text-align: right;
-}
-
-.reservation .section .guests {
-    margin-right: 20px;
-    float: right;
-}
-
-.reservation .section .guest-singular {
-    margin-right: 26px;
 }

@@ -1,30 +1,43 @@
 {% extends 'base.html' %}
 
 {% block content %}
-<p>Hola {{ user.username }}</p>
+<header></header>
 
-<div class="column">
+<div class="clear"></div>
+
+<div class="column grid_6 push_3 alpha omega">
     <ul>
         <li class="reservation">
-            <div class="section">Henry</div>
-            <div class="section"><span class="guests">3 guests</span></div>
-            <div class="section">45</div>
+            <div class="grid_2 alpha"><span class="text">Henry</span></div>
+            <div class="grid_2"><span class="text guests">3 guests</span></div>
+            <div class="grid_2 omega"><span class="text">8</span></div>
         </li>
         <li class="reservation">
-            <div class="section">Roman</div>
-            <div class="section"><span class="guests">12 guests</span></div>
-            <div class="section">67</div>
+            <div class="grid_2 alpha"><span class="text">Roman</span></div>
+            <div class="grid_2"><span class="text guests">12 guests</span></div>
+            <div class="grid_2 omega"><span class="text">15</span></div>
         </li>
         <li class="reservation">
-            <div class="section">Casey</div>
-            <div class="section"><span class="guests">4 guests</span></div>
-            <div class="section">89</div>
+            <div class="grid_2 alpha"><span class="text">Casey</span></div>
+            <div class="grid_2"><span class="text guests">4 guests</span></div>
+            <div class="grid_2 omega"><span class="text">23</span></div>
         </li>
         <li class="reservation">
-            <div class="section">Constance</div>
-            <div class="section"><span class="guests">1 guest&nbsp;</span></div>
-            <div class="section">123</div>
+            <div class="grid_2 alpha"><span class="text">Constance</span></div>
+            <div class="grid_2"><span class="text guests">1 guest&nbsp;</span></div>
+            <div class="grid_2 omega"><span class="text">51</span></div>
+        </li>
+        <li class="reservation">
+            <div class="grid_2 alpha"><span class="text">Kyle</span></div>
+            <div class="grid_2"><span class="text guests">6 guests</span></div>
+            <div class="grid_2 omega"><span class="text">90</span></div>
+        </li>
+        <li class="reservation">
+            <div class="grid_2 alpha"><span class="text">Ron</span></div>
+            <div class="grid_2"><span class="text guests">3 guests</span></div>
+            <div class="grid_2 omega"><span class="text">120</span></div>
         </li>
     </ul>
 </div>
+
 {% endblock %}
